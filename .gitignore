@@ -1,0 +1,26 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+.vercel
+.antigravity/
+.vscode/
+
+# Android build outputs
+android/app/build/
+android/.gradle/
+android/local.properties
+android/captures/
+*.apk
+*.aab
+
+# iOS build outputs
+ios/App/build/
+ios/App/Pods/
+ios/App/.symlinks/
+*.xcarchive
+*.ipa
