@@ -4,7 +4,7 @@ platform :ios do
   desc "Build and sign beta version for Apple TestFlight"
   lane :beta do
     build_app(
-      workspace: "App/App.xcworkspace",
+      project: "App/App.xcodeproj",
       scheme: "App",
       export_method: "app-store"
     )
@@ -14,7 +14,7 @@ platform :ios do
   desc "Deploy release to App Store Connect"
   lane :release do
     build_app(
-      workspace: "App/App.xcworkspace",
+      project: "App/App.xcodeproj",
       scheme: "App",
       export_method: "app-store"
     )
