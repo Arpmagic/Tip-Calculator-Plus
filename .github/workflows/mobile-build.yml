@@ -100,26 +100,32 @@ jobs:
       - name: Sync Native iOS Platform
         run: npx cap sync ios
 
-      - name: Compile iOS Release Build (Unsigned/Simulator Archive)
+      - name: Compile iOS Release Build (Unsigned .app)
         run: |
           xcodebuild -project ios/App/App.xcodeproj \
             -scheme App \
             -configuration Release \
             -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             build
 
-      - name: Compress iOS Build Output
+      - name: Package Standalone iOS IPA File
         run: |
-          mkdir -p build-output
-          tar -czf build-output/ios-app-build.tar.gz -C ios/App/build . || true
+          mkdir -p ipa-output/Payload
+          APP_PATH=$(find build -name "*.app" -type d | head -n 1)
+          echo "Found compiled app at: $APP_PATH"
+          cp -r "$APP_PATH" ipa-output/Payload/
+          cd ipa-output
+          zip -r Tip-Calculator-Plus.ipa Payload
+          cd ..
 
-      - name: Upload iOS Build Artifact
+      - name: Upload iOS IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tip-calculator-plus-ios-build
-          path: build-output/ios-app-build.tar.gz
-          if-no-files-found: ignore
+          name: tip-calculator-plus-ios-ipa
+          path: ipa-output/Tip-Calculator-Plus.ipa
+          if-no-files-found: warn
           retention-days: 14
