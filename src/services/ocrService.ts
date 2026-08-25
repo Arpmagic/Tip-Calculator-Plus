@@ -199,9 +199,19 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
   };
 
   // 1. Detect Venue / Restaurant Name
-  // A. Check for known store / restaurant brand match first
-  for (const line of lines.slice(0, 8)) {
-    const cleanUpper = line.toUpperCase().replace(/[^\w\sŻŹĆĄŚĘŁÓŃА-ЯІЇЄҐ]/gi, '');
+  // A. Check for known store / restaurant brand match first with store ID support (e.g. "SKLEP ŻABKA Z7394")
+  for (const line of lines.slice(0, 10)) {
+    const cleanUpper = line.toUpperCase().replace(/[^\w\sŻŹĆĄŚĘŁÓŃА-ЯІЇЄҐ]/gi, ' ');
+    
+    // Check Żabka with store ID (e.g. "SKLEP ŻABKA Z7394" or "ŻABKA Z7394")
+    const zabkaMatch = line.match(/(?:SKLEP\s+)?(?:ŻABKA|ZABKA)(?:\s+([A-Z0-9]+))?/i);
+    if (zabkaMatch) {
+      const storeId = zabkaMatch[1] ? ` ${zabkaMatch[1]}` : '';
+      detectedVenue = `Sklep Żabka${storeId}`;
+      break;
+    }
+
+    // Check other known brands
     for (const [key, brandTitle] of Object.entries(knownBrands)) {
       if (cleanUpper.includes(key)) {
         detectedVenue = brandTitle;
@@ -232,16 +242,20 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
       /pl\./i,
       /tel[:.]/i,
       /^\d+[\s\-/]/,
-      /^\d{2}-\d{3}\b/, // Polish postal code (e.g. 00-001)
+      /^\d{2}-\d{3}\b/,
       /\d{3}[-.\s]\d{3}/,
+      /^[a-z]{1,4}\s+[a-z]{1,4}\s+[a-z]{1,4}$/i, // Filter short random 2-3 word OCR gibberish
     ];
 
     for (let i = 0; i < Math.min(6, lines.length); i++) {
       const line = lines[i];
       const isIgnored = metaIgnorePatterns.some((pattern) => pattern.test(line));
       if (!isIgnored && line.length >= 3) {
-        detectedVenue = line.replace(/[^\w\s&'\-.ŻŹĆĄŚĘŁÓŃżźćąśęłóńА-Яа-яІіЇїЄєҐґ\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/g, '').trim();
-        if (detectedVenue.length >= 2) break;
+        const cleanedLine = line.replace(/[^\w\s&'\-.ŻŹĆĄŚĘŁÓŃżźćąśęłóńА-Яа-яІіЇїЄєҐґ\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/g, '').trim();
+        if (cleanedLine.length >= 2 && !/^(innes|ili|on|en)$/i.test(cleanedLine)) {
+          detectedVenue = cleanedLine;
+          break;
+        }
       }
     }
   }
@@ -271,7 +285,7 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
     clean = clean.replace(/\b\d{4}r\b/gi, ' ');
     clean = clean.replace(/\bNIP[:\s]*\d{10}\b/gi, ' ');
 
-    const matches = clean.match(/\b\d{1,5}[.,]\d{2}\b/g);
+    const matches = clean.match(/-?\b\d{1,5}[.,]\d{2}\b/g);
     if (!matches || matches.length === 0) {
       return normalizePriceString(clean);
     }
@@ -282,16 +296,10 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
   };
 
   // 4. Fiscal Regex Pattern Lexicons
-  // Grand Total: SUMA PLN, DO ZAPŁATY, RAZEM, TOTAL, GRAND TOTAL, KWOTA PLN, AMOUNT DUE, etc.
-  const grandTotalLineRegex = /(?:SUMA\s+PLN|RAZEM|DO\s+ZAPŁATY|DO\s+ZAPLATY|TOTAL|GRAND\s+TOTAL|KWOTA\s+PLN|KWOTA|BAL\s+DUE|BALANCE\s+DUE|AMOUNT\s+DUE|TOTAL\s+DUE|TOTAL\s+TO\s+PAY|FINAL\s+TOTAL|PŁATNOŚĆ\s+KARTĄ|PLATNOSC\s+KARTA|GESAMTBETRAG|GESAMT|SUMME|ZU\s+ZAHLEN|TOTAL\s+TTC|NET\s+A\s+PAYER|IMPORTE|TOTALE|СУМА|ВСЬОГО|ДО\s+СПЛАТИ|合計)/i;
+  const grandTotalLineRegex = /(?:SUMA\s*PLN|DO\s*ZAP[ŁL]ATY|RAZEM|TOTAL|GRAND\s*TOTAL|KWOTA\s*PLN|KWOTA|BAL\s*DUE|BALANCE\s*DUE|AMOUNT\s*DUE|TOTAL\s*DUE|TOTAL\s*TO\s*PAY|FINAL\s*TOTAL|PŁATNOŚĆ\s*KARTĄ|PLATNOSC\s*KARTA|GESAMTBETRAG|GESAMT|SUMME|ZU\s*ZAHLEN|TOTAL\s*TTC|NET\s*A\s*PAYER|IMPORTE|TOTALE|СУМА|ВСЬОГО|ДО\s*СПЛАТИ|合計)/i;
+  const taxLineRegex = /(?:SUMA\s*PTU|PTU\s*[A-Z]|PTU|VAT|PODATEK|KWOTA\s*PTU|SALES\s*TAX|STATE\s*TAX|CITY\s*TAX|TAX|MWST|UST|TVA|IVA|GST|HST|PST|ПДВ|ПОДАТОК|АКЦИЗ|消費税)/i;
+  const subtotalLineRegex = /(?:SPRZEDA[ZŻ]\s*OPODATKOWANA|NETTO|OPODATKOWANIE|WARTOŚĆ\s*NETTO|WARTOSC\s*NETTO|SUB[\s\-]*TOTAL|NET[\s\-]*AMOUNT|PRE[\s\-]*TAX|PODSUMA|SUMA\s*BEZ\s*PODATKU|TOTAL\s*HT|SOUS[\s\-]*TOTAL|IMPONIBILE|ZWISCHENSUMME|ПІДСУМОК|小計)/i;
 
-  // Tax: SUMA PTU, PTU, VAT, PODATEK, TAX, SALES TAX, MWST, TVA, IVA, ПДВ
-  const taxLineRegex = /(?:SUMA\s+PTU|PTU\s+[A-D]|PTU|VAT|PODATEK|KWOTA\s+PTU|SALES\s+TAX|STATE\s+TAX|CITY\s+TAX|TAX|MWST|UST|TVA|IVA|GST|HST|PST|ПДВ|ПОДАТОК|АКЦИЗ|消費税)/i;
-
-  // Subtotal / Net: SPRZEDAŻ OPODATKOWANA, NETTO, SUBTOTAL, PRE-TAX, PODSUMA, TOTAL HT, ПІДСУМОК
-  const subtotalLineRegex = /(?:SPRZEDAŻ\s+OPODATKOWANA|SPRZEDAZ\s+OPODATKOWANA|NETTO|OPODATKOWANIE|WARTOŚĆ\s+NETTO|WARTOSC\s+NETTO|SUB[\s\-]*TOTAL|NET[\s\-]*AMOUNT|PRE[\s\-]*TAX|PODSUMA|SUMA\s+BEZ\s+PODATKU|TOTAL\s+HT|SOUS[\s\-]*TOTAL|IMPONIBILE|ZWISCHENSUMME|ПІДСУМОК|小計)/i;
-
-  // Summary exclusion keywords for individual item extraction
   const summaryExclusionKeywords = [
     'subtotal', 'sub total', 'sub-total', 'netto', 'sprzedaż', 'sprzedaz',
     'tax', 'vat', 'ptu', 'podatek', 'mwst', 'tva', 'iva', 'gst',
@@ -301,7 +309,7 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
     'tip', 'gratuity', 'napiwek', 'service charge', 'guest count', 'server', 'kelner',
     'table', 'stolik', 'check #', 'rachunek', 'order #', 'zamówienie',
     'paragon', 'fiskalny', 'nip', 'kasa', 'bdo', 'dziękujemy', 'thank you',
-    'tel:', 'phone', 'www.', 'http', 'opłata', 'rabat', 'discount',
+    'tel:', 'phone', 'www.', 'http',
   ];
 
   // 5. Line-by-Line Fiscal Analysis
@@ -315,7 +323,6 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
       if (price !== null && price > 0) {
         subtotal = price;
       } else if (idx + 1 < lines.length) {
-        // Lookahead to immediate next line if value is stacked below
         const nextPrice = extractValidLinePrice(lines[idx + 1]);
         if (nextPrice !== null && nextPrice > 0 && !grandTotalLineRegex.test(lines[idx + 1])) {
           subtotal = nextPrice;
@@ -328,9 +335,7 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
     if (taxLineRegex.test(line)) {
       const price = extractValidLinePrice(line);
       if (price !== null && price > 0) {
-        // Prevent accidental grand total matching if line says "Total Tax"
         if (!lower.includes('grand total') && !lower.includes('suma pln') && !lower.includes('do zapłaty') && !lower.includes('razem')) {
-          // If tax is not an unreasonable multiple
           if (taxAmount === 0 || price < taxAmount * 2) {
             taxAmount = price;
           }
@@ -362,10 +367,11 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
       continue;
     }
 
-    // D. Individual Line Items Detection
+    // D. Individual Line Items Detection (including discounts / opust)
     const isSummaryLine = summaryExclusionKeywords.some((kw) => lower.includes(kw));
     if (!isSummaryLine) {
-      const priceTrailingRegex = /(?:[\$£€₴₹\s]|^)\s*(\d{1,4}[.,]\d{2})(?:\s*[A-Za-z*złPLN]+)?$/i;
+      // Check for price at end of line (e.g. "JOGU FAN TWIX CAR 11,00 A" or "OPUST -1,02")
+      const priceTrailingRegex = /(?:[\$£€₴₹\s]|^)\s*(-?\d{1,4}[.,]\d{2})(?:\s*[A-Za-z*złPLN]+)?$/i;
       const priceMatch = line.match(priceTrailingRegex);
 
       if (priceMatch) {
@@ -373,7 +379,6 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
         const price = parseFloat(rawPrice);
 
         let itemName = line.replace(priceMatch[0], '').trim();
-        // Remove item weights from item name if desired, or keep them clean
         const qtyMatch = itemName.match(/^(\d+)\s*[xX*]?\s+(.+)$/);
         let quantity = 1;
         if (qtyMatch) {
@@ -381,12 +386,14 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
           itemName = qtyMatch[2];
         }
 
+        // Clean out noisy characters and item quantity multiplier lines like "1 * 11,00"
         itemName = itemName
+          .replace(/^\d+\s*[*xX]\s*[\d.,]+\s*/, '')
           .replace(/^[^a-zA-Z0-9ŻŹĆĄŚĘŁÓŃżźćąśęłóńА-Яа-яІіЇїЄєҐґ]+/, '')
           .replace(/[^a-zA-Z0-9\s&'\-./ŻŹĆĄŚĘŁÓŃżźćąśęłóńА-Яа-яІіЇїЄєҐґ]/g, '')
           .trim();
 
-        if (itemName.length >= 2 && price > 0 && price < 2000) {
+        if (itemName.length >= 2 && Math.abs(price) > 0 && Math.abs(price) < 5000) {
           lineItems.push({
             id: `item_${lineItems.length}_${Date.now()}`,
             name: itemName,
@@ -395,6 +402,35 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
           });
         }
       }
+    }
+  }
+
+  // 6. Multi-Line Regex Fallback Across Full Text Block
+  // (Handles cases where OCR broke keywords and numbers across newlines/spaces)
+  if (grandTotal <= 0) {
+    const multiGtRegex = /(?:SUMA\s*PLN|DO\s*ZAP[ŁL]ATY|RAZEM|TOTAL|GRAND\s*TOTAL|BAL(?:ANCE)?\s*DUE|AMOUNT\s*DUE|TOTAL\s*DUE)[\s\S]{0,30}?([0-9]{1,4}[.,\s][0-9]{2})/gi;
+    let m;
+    while ((m = multiGtRegex.exec(rawText)) !== null) {
+      const p = parseFloat(m[1].replace(/\s/g, '').replace(',', '.'));
+      if (p > grandTotal) grandTotal = p;
+    }
+  }
+
+  if (taxAmount <= 0) {
+    const multiTaxRegex = /(?:SUMA\s*PTU|PTU\s*[A-Z]|VAT|TAX|PODATEK|MWST|TVA|IVA|ПДВ)[\s\S]{0,30}?([0-9]{1,4}[.,\s][0-9]{2})/gi;
+    let m;
+    while ((m = multiTaxRegex.exec(rawText)) !== null) {
+      const p = parseFloat(m[1].replace(/\s/g, '').replace(',', '.'));
+      if (p > 0 && (grandTotal <= 0 || p < grandTotal)) taxAmount = p;
+    }
+  }
+
+  if (subtotal <= 0) {
+    const multiSubRegex = /(?:SPRZEDA[ZŻ]\s*OPODATKOWANA|NETTO|OPODATKOWANIE|SUB[\s\-]*TOTAL|TOTAL\s*HT|PRE[\s\-]*TAX)[\s\S]{0,30}?([0-9]{1,4}[.,\s][0-9]{2})/gi;
+    let m;
+    while ((m = multiSubRegex.exec(rawText)) !== null) {
+      const p = parseFloat(m[1].replace(/\s/g, '').replace(',', '.'));
+      if (p > 0) subtotal = p;
     }
   }
 

@@ -1,0 +1,6 @@
+{
+  "version": "v2.5.0",
+  "buildTime": 1787640000000,
+  "commitHash": "4cf8db4",
+  "notes": "Autonomous receipt parsing, multi-line regex, receipt audit screen, and session persistence."
+}

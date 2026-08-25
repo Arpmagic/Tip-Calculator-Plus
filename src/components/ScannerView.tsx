@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { CurrencyRate, ItemizedItem } from '../types';
+import { CurrencyRate, ItemizedItem, CalculationHistoryItem } from '../types';
 import { 
   X, 
   Zap, 
@@ -12,13 +12,19 @@ import {
   RotateCcw, 
   AlertCircle,
   CheckCircle2,
-  CameraOff
+  CameraOff,
+  Trash2,
+  Plus,
+  History,
+  Sparkles,
+  Edit3
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useCamera } from '../hooks/useCamera';
 import { 
   scanReceiptWithTesseract, 
   ParsedReceiptData, 
+  ExtractedLineItem,
   convertOcrItemsToItemized,
   OcrProgressInfo
 } from '../services/ocrService';
@@ -34,12 +40,14 @@ export interface ScannerViewProps {
     items?: ItemizedItem[];
     currency?: string;
   }) => void;
+  onSaveHistory?: (item: CalculationHistoryItem) => void;
 }
 
 export const ScannerView: React.FC<ScannerViewProps> = ({
   onClose,
   selectedCurrency,
   onApplyScan,
+  onSaveHistory,
 }) => {
   const { language, t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -73,12 +81,14 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
   });
   const [parsedData, setParsedData] = useState<ParsedReceiptData | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Editable parsed values
   const [venue, setVenue] = useState<string>('');
   const [grandTotal, setGrandTotal] = useState<number>(0);
   const [taxAmount, setTaxAmount] = useState<number>(0);
   const [subtotal, setSubtotal] = useState<number>(0);
+  const [lineItems, setLineItems] = useState<ExtractedLineItem[]>([]);
 
   // Clean up object URLs on unmount
   useEffect(() => {
@@ -99,11 +109,13 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
     setIsProcessing(false);
     setParsedData(null);
     setErrorMessage(null);
+    setToastMessage(null);
     setProgressInfo({ status: t.scanner.extractingTotals, progress: 0 });
     setVenue('');
     setGrandTotal(0);
     setTaxAmount(0);
     setSubtotal(0);
+    setLineItems([]);
     if (fileInputRef.current) fileInputRef.current.value = '';
     startCamera();
   };
@@ -115,7 +127,6 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
     setParsedData(null);
     setImagePreviewUrl(previewUrl);
 
-    // Stop active camera stream during OCR processing to save battery & memory
     stopCamera();
 
     try {
@@ -128,6 +139,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
       setGrandTotal(result.grandTotal);
       setTaxAmount(result.taxAmount);
       setSubtotal(result.subtotal > 0 ? result.subtotal : Math.max(0, result.grandTotal - result.taxAmount));
+      setLineItems(result.lineItems || []);
     } catch (err: any) {
       console.error('OCR Processing error:', err);
       setErrorMessage(err?.message || t.scanner.processingError);
@@ -166,30 +178,139 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
     processImageSource(file, objectUrl);
   };
 
-  // Action: Populate Main Calculator
+  // Item Management Handlers
+  const handleItemNameChange = (id: string, newName: string) => {
+    setLineItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, name: newName } : item))
+    );
+  };
+
+  const handleItemPriceChange = (id: string, newPriceStr: string) => {
+    const newPrice = parseFloat(newPriceStr) || 0;
+    setLineItems((prev) => {
+      const updated = prev.map((item) =>
+        item.id === id ? { ...item, price: newPrice } : item
+      );
+      const newItemsSum = updated.reduce((acc, it) => acc + it.price, 0);
+      if (newItemsSum > 0) {
+        setSubtotal(parseFloat(newItemsSum.toFixed(2)));
+        setGrandTotal(parseFloat((newItemsSum + taxAmount).toFixed(2)));
+      }
+      return updated;
+    });
+  };
+
+  const handleDeleteItem = (id: string) => {
+    setLineItems((prev) => {
+      const filtered = prev.filter((item) => item.id !== id);
+      const newItemsSum = filtered.reduce((acc, it) => acc + it.price, 0);
+      if (newItemsSum > 0) {
+        setSubtotal(parseFloat(newItemsSum.toFixed(2)));
+        setGrandTotal(parseFloat((newItemsSum + taxAmount).toFixed(2)));
+      }
+      return filtered;
+    });
+  };
+
+  const handleAddItem = () => {
+    const newItem: ExtractedLineItem = {
+      id: `item_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      name: '',
+      price: 0,
+      quantity: 1,
+    };
+    setLineItems((prev) => [...prev, newItem]);
+  };
+
+  // Action 1: Approve & Save to History Immediately
+  const handleApproveAndSaveToHistory = () => {
+    const finalSubtotal = subtotal > 0 ? subtotal : grandTotal;
+    const finalGrandTotal = grandTotal > 0 ? grandTotal : finalSubtotal + taxAmount;
+    const now = new Date();
+
+    const formattedItems: ItemizedItem[] = lineItems.length > 0
+      ? convertOcrItemsToItemized(lineItems)
+      : [{
+          id: `item_${Date.now()}`,
+          name: venue.trim() || t.calculator.defaultVenueName,
+          price: finalSubtotal,
+          assignedPersonIds: ['p1'],
+        }];
+
+    const historyEntry: CalculationHistoryItem = {
+      id: `calc_${Date.now()}`,
+      venueName: venue.trim() || t.calculator.defaultVenueName,
+      date: now.toLocaleDateString(language === 'uk' ? 'uk-UA' : language === 'ru' ? 'ru-RU' : 'en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+      time: now.toLocaleTimeString(language === 'uk' ? 'uk-UA' : language === 'ru' ? 'ru-RU' : 'en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      mealType: 'Dinner',
+      currency: parsedData?.detectedCurrency || selectedCurrency.code,
+      billAmount: finalSubtotal,
+      taxAmount: taxAmount,
+      tipPercent: 0,
+      tipAmount: 0,
+      totalBill: finalGrandTotal,
+      splitCount: 1,
+      totalPerPerson: finalGrandTotal,
+      isItemized: formattedItems.length > 0,
+      itemizedData: {
+        items: formattedItems,
+        people: [{ id: 'p1', name: 'You', avatarColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40', initials: 'Y' }],
+        taxRatePercent: finalSubtotal > 0 ? parseFloat(((taxAmount / finalSubtotal) * 100).toFixed(1)) : 0,
+        tipPercent: 0,
+        subtotal: finalSubtotal,
+        taxAmount: taxAmount,
+        tipAmount: 0,
+        grandTotal: finalGrandTotal,
+      },
+    };
+
+    if (onSaveHistory) {
+      onSaveHistory(historyEntry);
+      setToastMessage(t.scanner.savedToHistoryToast);
+      setTimeout(() => {
+        onClose();
+      }, 900);
+    } else {
+      handleSendToCalculator();
+    }
+  };
+
+  // Action 2: Populate Main Calculator & Itemized Split
   const handleSendToCalculator = () => {
+    const finalSubtotal = subtotal > 0 ? subtotal : grandTotal;
+    const finalItems = lineItems.length > 0 ? convertOcrItemsToItemized(lineItems) : undefined;
+
     onApplyScan({
-      billAmount: subtotal > 0 ? subtotal : grandTotal,
+      billAmount: finalSubtotal,
       taxAmount: taxAmount,
       venueName: venue.trim() || t.calculator.defaultVenueName,
+      items: finalItems,
       currency: parsedData?.detectedCurrency,
     });
     onClose();
   };
 
-  // Action: Itemized Split
+  // Action 3: Itemized Split Screen Direct Forwarding
   const handleSendToItemized = () => {
-    const items = parsedData?.lineItems && parsedData.lineItems.length > 0
-      ? convertOcrItemsToItemized(parsedData.lineItems)
+    const finalSubtotal = subtotal > 0 ? subtotal : grandTotal;
+    const items = lineItems.length > 0
+      ? convertOcrItemsToItemized(lineItems)
       : [{
           id: `item_${Date.now()}`,
           name: venue.trim() || t.calculator.defaultVenueName,
-          price: subtotal > 0 ? subtotal : grandTotal,
+          price: finalSubtotal,
           assignedPersonIds: ['p1', 'p2'],
         }];
 
     onApplyScan({
-      billAmount: subtotal > 0 ? subtotal : grandTotal,
+      billAmount: finalSubtotal,
       taxAmount: taxAmount,
       venueName: venue.trim() || t.calculator.defaultVenueName,
       items,
@@ -420,23 +541,34 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
         </footer>
       )}
 
-      {/* STATE 3 CONTROLS: Actionable Result Sheet (Slide-Up Modal) */}
+      {/* STATE 3 CONTROLS: Interactive Receipt Audit & Verification Modal */}
       {imagePreviewUrl && !isProcessing && parsedData && (
-        <div className="relative z-30 animate-slide-up bg-[#090D16]/95 backdrop-blur-2xl border-t border-white/[0.08] rounded-t-3xl p-5 sm:p-6 shadow-[0_-16px_48px_rgba(0,0,0,0.8)] max-w-lg mx-auto w-full flex flex-col gap-4 pb-safe">
+        <div className="relative z-30 animate-slide-up bg-[#090D16]/95 backdrop-blur-2xl border-t border-white/[0.08] rounded-t-3xl p-5 sm:p-6 shadow-[0_-16px_48px_rgba(0,0,0,0.8)] max-w-lg mx-auto w-full flex flex-col gap-3.5 pb-safe max-h-[85vh] overflow-y-auto">
           
+          {/* Toast Notification Banner */}
+          {toastMessage && (
+            <div className="p-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-mono flex items-center gap-2 shadow-lg animate-fade-in">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span className="font-bold">{toastMessage}</span>
+            </div>
+          )}
+
           {/* Header: Venue & Clean Verified Status */}
           <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
             <div className="flex-1 min-w-0">
               <span className="font-mono text-[10px] text-[#c4c7c8]/80 uppercase tracking-widest block font-semibold">
                 {t.scanner.detectedVenue}
               </span>
-              <input
-                type="text"
-                value={venue}
-                onChange={(e) => setVenue(e.target.value)}
-                className="bg-transparent border-none outline-none font-display font-black text-xl text-white p-0 w-full focus:ring-0 truncate mt-0.5"
-                placeholder={t.calculator.defaultVenueName}
-              />
+              <div className="flex items-center gap-2 mt-0.5">
+                <input
+                  type="text"
+                  value={venue}
+                  onChange={(e) => setVenue(e.target.value)}
+                  className="bg-transparent border-none outline-none font-display font-black text-lg text-white p-0 w-full focus:ring-0 truncate"
+                  placeholder={t.calculator.defaultVenueName}
+                />
+                <Edit3 className="w-3.5 h-3.5 text-white/30 shrink-0" />
+              </div>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
@@ -446,7 +578,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
                 </span>
               )}
               {parsedData.isValidated && (
-                <span className="inline-flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-bold px-3 py-1 rounded-full shadow-sm">
+                <span className="inline-flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-bold px-2.5 py-1 rounded-full shadow-sm">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                   <span>{t.scanner.verified}</span>
                 </span>
@@ -454,81 +586,150 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
             </div>
           </div>
 
+          {/* Extracted Line Items Section */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[11px] uppercase tracking-wider text-[#c4c7c8]/80 font-bold flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{t.scanner.lineItemsTitle} ({lineItems.length})</span>
+              </span>
+              <button
+                type="button"
+                onClick={handleAddItem}
+                className="text-[11px] font-mono text-emerald-400 hover:text-emerald-300 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 transition-all cursor-pointer"
+              >
+                <Plus className="w-3 h-3" />
+                <span>{t.scanner.addItem}</span>
+              </button>
+            </div>
+
+            {/* Line Items List / Table */}
+            {lineItems.length > 0 ? (
+              <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                {lineItems.map((item, index) => (
+                  <div
+                    key={item.id || index}
+                    className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.15] transition-all"
+                  >
+                    <input
+                      type="text"
+                      value={item.name}
+                      onChange={(e) => handleItemNameChange(item.id, e.target.value)}
+                      placeholder={t.scanner.itemNamePlaceholder}
+                      className="flex-1 bg-transparent border-none outline-none text-xs text-white placeholder-white/20 font-mono focus:ring-0 min-w-0"
+                    />
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-xs text-[#c4c7c8]/60 font-mono">{selectedCurrency.symbol}</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={item.price || ''}
+                        onChange={(e) => handleItemPriceChange(item.id, e.target.value)}
+                        placeholder="0.00"
+                        className="w-16 bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-right text-xs font-mono font-bold text-white tabular-nums focus:outline-none focus:border-amber-400/50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteItem(item.id)}
+                        className="p-1 rounded-lg text-[#c4c7c8]/40 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                        title={t.scanner.deleteItem}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-3 px-4 rounded-xl bg-white/[0.02] border border-white/[0.05] text-center text-xs font-mono text-[#c4c7c8]/50">
+                <span>{t.scanner.emptyItemsAudit}</span>
+              </div>
+            )}
+          </div>
+
           {/* Grand Total & Tax Hero Grid */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 pt-1">
             {/* Grand Total Hero Card */}
-            <div className="flex flex-col p-4 rounded-2xl bg-white/[0.03] backdrop-blur-2xl border border-emerald-500/30 shadow-[0_8px_32px_rgba(0,0,0,0.36)] relative overflow-hidden">
+            <div className="flex flex-col p-3.5 rounded-2xl bg-white/[0.03] backdrop-blur-2xl border border-emerald-500/30 shadow-[0_8px_32px_rgba(0,0,0,0.36)] relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
-              <span className="font-mono text-[10px] text-emerald-400 uppercase font-bold tracking-wider mb-1 z-10">
+              <span className="font-mono text-[10px] text-emerald-400 uppercase font-bold tracking-wider mb-0.5 z-10">
                 {t.scanner.detectedTotal}
               </span>
               <div className="flex items-baseline gap-1.5 z-10">
-                <span className="text-lg text-emerald-400 font-bold">{selectedCurrency.symbol}</span>
+                <span className="text-base text-emerald-400 font-bold">{selectedCurrency.symbol}</span>
                 <input
                   type="number"
                   step="0.01"
                   value={grandTotal || ''}
                   onChange={(e) => setGrandTotal(parseFloat(e.target.value) || 0)}
-                  className="bg-transparent border-none outline-none font-display font-black text-2xl sm:text-3xl text-white p-0 w-full tabular-nums tracking-tight"
+                  className="bg-transparent border-none outline-none font-display font-black text-xl sm:text-2xl text-white p-0 w-full tabular-nums tracking-tight"
                 />
               </div>
             </div>
 
             {/* Extracted Tax Card */}
-            <div className="flex flex-col p-4 rounded-2xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.36)]">
-              <span className="font-mono text-[10px] text-[#c4c7c8]/80 uppercase font-semibold tracking-wider mb-1">
+            <div className="flex flex-col p-3.5 rounded-2xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.36)]">
+              <span className="font-mono text-[10px] text-[#c4c7c8]/80 uppercase font-semibold tracking-wider mb-0.5">
                 {t.scanner.detectedTax}
               </span>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-lg text-[#c4c7c8]/70 font-bold">{selectedCurrency.symbol}</span>
+                <span className="text-base text-[#c4c7c8]/70 font-bold">{selectedCurrency.symbol}</span>
                 <input
                   type="number"
                   step="0.01"
                   value={taxAmount || ''}
                   onChange={(e) => setTaxAmount(parseFloat(e.target.value) || 0)}
-                  className="bg-transparent border-none outline-none font-display font-extrabold text-xl sm:text-2xl text-white p-0 w-full tabular-nums"
+                  className="bg-transparent border-none outline-none font-display font-extrabold text-lg sm:text-xl text-white p-0 w-full tabular-nums"
                 />
               </div>
             </div>
           </div>
 
           {/* Subtotal Info Row */}
-          <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-white/[0.02] border border-white/[0.06] text-xs font-mono text-[#c4c7c8]">
+          <div className="flex items-center justify-between px-3.5 py-1.5 rounded-xl bg-white/[0.02] border border-white/[0.06] text-xs font-mono text-[#c4c7c8]">
             <span>{t.scanner.calculatedSubtotal}</span>
             <span className="font-bold text-white tabular-nums">
               {formatCurrency(subtotal, selectedCurrency.code, language)}
             </span>
           </div>
 
-          {/* 56dp Luxury Action CTAs (Thumb Zone) */}
-          <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
+          {/* Three Clear 56dp Luxury Action CTAs (Zero Tedium) */}
+          <div className="flex flex-col gap-2 pt-1">
+            {/* CTA 1: Approve & Save to History Immediately */}
             <button
-              id="btn-scanner-send-calc"
-              onClick={handleSendToCalculator}
-              className="flex-1 min-h-[56px] h-14 rounded-2xl bg-gradient-to-r from-[#F5D061] via-[#E6B83D] to-[#C9971E] text-[#090D16] font-display font-black text-sm flex items-center justify-center gap-2.5 shadow-[0_4px_20px_rgba(230,184,61,0.25)] hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+              id="btn-scanner-approve-history"
+              type="button"
+              onClick={handleApproveAndSaveToHistory}
+              className="w-full min-h-[56px] h-14 rounded-2xl bg-gradient-to-r from-[#F5D061] via-[#E6B83D] to-[#C9971E] text-[#090D16] font-display font-black text-sm flex items-center justify-center gap-2.5 shadow-[0_4px_20px_rgba(230,184,61,0.25)] hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
             >
-              <Check className="w-5 h-5 stroke-[2.5]" />
-              <span>{t.scanner.applyToCalc}</span>
+              <Check className="w-5 h-5 stroke-[3]" />
+              <span>{t.scanner.approveAndSave}</span>
             </button>
 
-            <button
-              id="btn-scanner-send-itemized"
-              onClick={handleSendToItemized}
-              className="flex-1 min-h-[56px] h-14 rounded-2xl bg-white/[0.05] hover:bg-white/[0.1] text-white font-display font-black text-sm flex items-center justify-center gap-2.5 active:scale-[0.98] transition-all border border-white/[0.12] cursor-pointer shadow-md"
-            >
-              <Layers className="w-5 h-5 text-emerald-400" />
-              <span>{t.scanner.applyToItemized}</span>
-            </button>
+            <div className="flex gap-2">
+              {/* CTA 2: Send to Calculator / Split */}
+              <button
+                id="btn-scanner-send-calc"
+                type="button"
+                onClick={handleSendToCalculator}
+                className="flex-1 min-h-[48px] h-12 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white font-display font-bold text-xs flex items-center justify-center gap-2 active:scale-[0.98] transition-all border border-white/[0.12] cursor-pointer shadow-md"
+              >
+                <Layers className="w-4 h-4 text-emerald-400" />
+                <span>{t.scanner.sendToCalcAndSplit}</span>
+              </button>
+
+              {/* CTA 3: Reject / Retake */}
+              <button
+                id="btn-scanner-retake"
+                type="button"
+                onClick={handleRetake}
+                className="min-h-[48px] h-12 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-[#c4c7c8] hover:text-white font-mono text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all border border-white/10 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>{t.scanner.retake}</span>
+              </button>
+            </div>
           </div>
-
-          {/* Retake CTA */}
-          <button
-            onClick={handleRetake}
-            className="w-full text-center text-xs font-mono text-[#c4c7c8]/80 hover:text-white flex items-center justify-center gap-1.5 py-1 transition-colors cursor-pointer"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>{t.scanner.retake}</span>
-          </button>
 
         </div>
       )}

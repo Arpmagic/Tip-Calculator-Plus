@@ -280,6 +280,33 @@ const testCases: TestCase[] = [
     expectedTax: 4.21,
     expectedSubtotal: 18.29,
   },
+
+  // 11. Real Device Photo (image_8842be.jpg) - Żabka Z7394 with multiline OCR breaks
+  {
+    id: 'zabka_z7394_real_device',
+    name: 'Real Device Żabka Z7394 (image_8842be.jpg)',
+    rawText: `
+      SKLEP ŻABKA Z7394
+      ŻABKA POLSKA SP. Z O.O.
+      PARAGON FISKALNY
+      JOGU FAN TWIX CAR 11,00 A
+      WODA NGAZ 5L PRIMA 11,98 A
+      OPUST -1,02
+      SPRZEDAŻ OPODATKOWANA 21,96
+      SUMA PTU 2,72
+      SUMA PLN
+      21,96
+      DO ZAPŁATY
+      21,96
+      PŁATNOŚĆ KARTĄ 21,96
+      2026-08-25 14:40
+    `,
+    expectedVenue: 'Sklep Żabka Z7394',
+    expectedCurrency: 'PLN',
+    expectedGrandTotal: 21.96,
+    expectedTax: 2.72,
+    expectedSubtotal: 19.24,
+  },
 ];
 
 export function runOcrBenchmarks() {
