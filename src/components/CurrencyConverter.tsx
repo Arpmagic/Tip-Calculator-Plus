@@ -104,7 +104,7 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
               className="bg-transparent text-xs font-mono font-bold text-white border-none outline-none cursor-pointer"
             >
               {currencies.map(c => (
-                <option key={c.code} value={c.code} className="bg-[#0c1324] text-white">
+                <option key={c.code} value={c.code} className="bg-[#0B0F19] text-white">
                   {c.code} ({c.symbol})
                 </option>
               ))}
@@ -148,7 +148,7 @@ export const CurrencyConverter: React.FC<CurrencyConverterProps> = ({
             <span>Auto</span>
             <div className={`w-8 h-4.5 rounded-full transition-colors relative border border-white/20 ${autoUpdate ? 'bg-emerald-400' : 'bg-white/10'}`}>
               <div className={`w-3.5 h-3.5 rounded-full transition-transform absolute top-0.5 ${
-                autoUpdate ? 'translate-x-4 bg-[#0c1324]' : 'translate-x-0.5 bg-white/70'
+                autoUpdate ? 'translate-x-4 bg-[#0B0F19]' : 'translate-x-0.5 bg-white/70'
               }`} />
             </div>
           </button>

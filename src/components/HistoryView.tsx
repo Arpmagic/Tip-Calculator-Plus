@@ -298,7 +298,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                   navigator.clipboard?.writeText(text);
                   alert(t.common.copied);
                 }}
-                className="flex-1 min-h-[48px] rounded-2xl bg-white text-[#0c1324] font-display font-extrabold text-xs flex items-center justify-center gap-2 hover:bg-white/90 active:scale-[0.97] transition-all shadow-lg"
+                className="flex-1 min-h-[48px] rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] font-display font-extrabold text-xs flex items-center justify-center gap-2 hover:brightness-105 active:scale-[0.97] transition-all shadow-[0_0_16px_rgba(251,191,36,0.3)] cursor-pointer"
               >
                 <Share2 className="w-4 h-4" />
                 <span>{t.common.copy}</span>

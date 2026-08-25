@@ -246,7 +246,10 @@ export const ru: TranslationSchema = {
     tasksRemaining: 'задач осталось',
     profileTab: 'Обзор профиля',
     tasksTab: 'Задачи ресторанов',
-    signOut: 'Войти / Сменить аккаунт',
+    signInOrRegister: 'Войти / Зарегистрироваться',
+    switchAccount: 'Сменить аккаунт',
+    signOut: 'Выйти из аккаунта',
+    signOutConfirm: 'Вы уверены, что хотите выйти из своего аккаунта?',
     deviceEncryptedNotice: 'Локальное зашифрованное хранилище на этом устройстве',
   },
   settings: {

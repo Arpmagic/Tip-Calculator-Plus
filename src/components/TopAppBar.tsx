@@ -58,7 +58,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
               className="flex items-center gap-1.5 min-h-[44px] px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] text-xs font-display font-extrabold transition-all active:scale-95 shadow-[0_0_20px_rgba(251,191,36,0.35)] hover:brightness-105 cursor-pointer"
               aria-label="Upgrade to Pro"
             >
-              <Crown className="w-3.5 h-3.5 fill-[#0c1324]" />
+              <Crown className="w-3.5 h-3.5 fill-[#0B0F19]" />
               <span>PRO</span>
             </button>
           )}

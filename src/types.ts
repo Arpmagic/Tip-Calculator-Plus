@@ -17,6 +17,7 @@ export interface UserProfile {
   name: string;
   email: string;
   avatarUrl?: string;
+  isGuest?: boolean;
   isPro: boolean;
   proPlan?: 'lifetime' | 'monthly' | 'annual';
   defaultCurrency: string;

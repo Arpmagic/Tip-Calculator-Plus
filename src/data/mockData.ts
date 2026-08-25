@@ -4,6 +4,7 @@ export const INITIAL_USER: UserProfile = {
   id: 'usr_default',
   name: 'Guest User',
   email: '',
+  isGuest: true,
   isPro: false,
   defaultTip: 20,
   defaultCurrency: 'USD',

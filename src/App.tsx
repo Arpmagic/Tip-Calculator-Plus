@@ -137,18 +137,39 @@ export const App: React.FC = () => {
     taxAmount: number;
     venueName: string;
     items?: ItemizedItem[];
+    currency?: string;
   }) => {
     setScannedBillData({
       billAmount: result.billAmount,
       taxAmount: result.taxAmount,
       venueName: result.venueName,
     });
+
+    // Auto-switch currency if detected on receipt (e.g. PLN, EUR, GBP, UAH)
+    if (result.currency) {
+      const matchedCurrency = currencies.find((c) => c.code === result.currency);
+      if (matchedCurrency) {
+        setSelectedCurrency(matchedCurrency);
+      }
+    }
+
     if (result.items && result.items.length > 0) {
       setItemizedItems(result.items);
       setCurrentScreen('itemized');
     } else {
       setCurrentScreen('calculator');
     }
+  };
+
+  const handleLogout = () => {
+    const guestUser: UserProfileType = {
+      ...INITIAL_USER,
+      isGuest: true,
+      isPro: false,
+      id: `usr_${Date.now()}`,
+    };
+    setUser(guestUser);
+    localStorage.setItem('tip_calc_user', JSON.stringify(guestUser));
   };
 
   const handleClearAllData = async () => {
@@ -190,8 +211,8 @@ export const App: React.FC = () => {
         user={user}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 w-full max-w-2xl mx-auto px-4 pt-20 pb-36 sm:px-6">
+      {/* Main Content Area with Viewport Safe Clearances (Zero Clipping on Physical Devices) */}
+      <main className="flex-1 w-full max-w-2xl mx-auto px-4 pt-content-safe pb-content-safe sm:px-6">
         {currentScreen === 'calculator' && (
           <MainCalculator
             selectedCurrency={selectedCurrency}
@@ -259,6 +280,7 @@ export const App: React.FC = () => {
             history={history}
             onOpenAuth={() => setIsAuthOpen(true)}
             onOpenPaywall={() => setIsPaywallOpen(true)}
+            onLogout={handleLogout}
           />
         )}
       </main>

@@ -32,6 +32,7 @@ export interface ScannerViewProps {
     taxAmount: number;
     venueName: string;
     items?: ItemizedItem[];
+    currency?: string;
   }) => void;
 }
 
@@ -171,6 +172,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
       billAmount: subtotal > 0 ? subtotal : grandTotal,
       taxAmount: taxAmount,
       venueName: venue.trim() || t.calculator.defaultVenueName,
+      currency: parsedData?.detectedCurrency,
     });
     onClose();
   };
@@ -191,6 +193,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
       taxAmount: taxAmount,
       venueName: venue.trim() || t.calculator.defaultVenueName,
       items,
+      currency: parsedData?.detectedCurrency,
     });
     onClose();
   };
@@ -436,16 +439,23 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
               />
             </div>
 
-            {parsedData.isValidated ? (
-              <span className="inline-flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold px-3 py-1.5 rounded-full shrink-0">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>{t.scanner.verified}</span>
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 bg-sky-500/20 border border-sky-500/40 text-sky-300 text-xs font-mono px-3 py-1.5 rounded-full shrink-0">
-                <span>{t.scanner.parsed}</span>
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {parsedData.detectedCurrency && (
+                <span className="inline-flex items-center gap-1 bg-amber-400/15 border border-amber-400/40 text-amber-300 text-xs font-mono font-bold px-2.5 py-1 rounded-full shrink-0">
+                  <span>{parsedData.detectedCurrency}</span>
+                </span>
+              )}
+              {parsedData.isValidated ? (
+                <span className="inline-flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold px-3 py-1.5 rounded-full shrink-0">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>{t.scanner.verified}</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 bg-sky-500/20 border border-sky-500/40 text-sky-300 text-xs font-mono px-3 py-1.5 rounded-full shrink-0">
+                  <span>{t.scanner.parsed}</span>
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Grand Total & Tax Hero Grid */}

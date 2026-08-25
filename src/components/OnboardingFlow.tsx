@@ -66,7 +66,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0c1324] text-[#dce1fb] flex flex-col justify-between overflow-y-auto px-4 py-6 sm:p-8">
+    <div className="fixed inset-0 z-50 bg-[#0B0F19] text-[#dce1fb] flex flex-col justify-between overflow-y-auto px-4 py-6 sm:p-8">
       {/* Top Header / Skip Button */}
       <div className="w-full max-w-md mx-auto flex justify-between items-center z-10 pt-2">
         <div className="flex items-center gap-2">
@@ -338,15 +338,15 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             <button
               id="onboarding-trial-btn"
               onClick={onOpenPaywall}
-              className="w-full h-14 bg-white text-[#0c1324] font-display font-bold text-base rounded-xl flex items-center justify-center gap-2 hover:bg-white/90 active:scale-[0.98] transition-all shadow-[0_0_25px_rgba(255,255,255,0.2)]"
+              className="w-full h-14 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] font-display font-black text-base rounded-xl flex items-center justify-center gap-2 hover:brightness-105 active:scale-[0.98] transition-all shadow-[0_0_25px_rgba(251,191,36,0.3)] cursor-pointer"
             >
-              <Zap className="w-4 h-4 fill-[#0c1324]" />
+              <Zap className="w-4 h-4 fill-[#0B0F19]" />
               {t.onboarding.unlockPro}
             </button>
             <button
               id="onboarding-continue-free-btn"
               onClick={onComplete}
-              className="w-full h-12 glass-button text-white font-medium text-xs rounded-xl flex items-center justify-center hover:bg-white/10 active:scale-[0.98] transition-all"
+              className="w-full h-12 glass-button text-white font-medium text-xs rounded-xl flex items-center justify-center hover:bg-white/10 active:scale-[0.98] transition-all cursor-pointer"
             >
               {t.onboarding.getStarted}
             </button>
@@ -355,10 +355,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           <button
             id="onboarding-next-btn"
             onClick={handleNext}
-            className="w-full h-14 bg-white text-[#0c1324] font-display font-bold text-base rounded-xl flex items-center justify-center gap-2 hover:bg-white/90 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+            className="w-full h-14 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] font-display font-black text-base rounded-xl flex items-center justify-center gap-2 hover:brightness-105 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(251,191,36,0.25)] cursor-pointer"
           >
-            {currentStep === 2 ? t.onboarding.getStarted : t.onboarding.next}
-            <ArrowRight className="w-4 h-4" />
+            <span>{currentStep === 2 ? t.onboarding.getStarted : t.onboarding.next}</span>
+            <ArrowRight className="w-4 h-4 stroke-[3]" />
           </button>
         )}
       </footer>

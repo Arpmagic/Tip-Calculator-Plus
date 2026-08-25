@@ -77,7 +77,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fade-in overflow-y-auto">
       <div 
-        className="w-full max-w-lg glass-card rounded-3xl p-5 sm:p-7 border border-white/20 shadow-2xl relative space-y-6 my-auto max-h-[92vh] overflow-y-auto bg-[#0c1324]/95"
+        className="w-full max-w-lg glass-card rounded-3xl p-5 sm:p-7 border border-white/20 shadow-2xl relative space-y-6 my-auto max-h-[92vh] overflow-y-auto bg-[#0B0F19]/95"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -127,9 +127,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     key={lang.code}
                     type="button"
                     onClick={() => setLanguage(lang.code)}
-                    className={`min-h-[48px] py-2 px-2 rounded-xl flex flex-col items-center justify-center gap-0.5 border transition-all text-center active:scale-95 ${
+                    className={`min-h-[48px] py-2 px-2 rounded-xl flex flex-col items-center justify-center gap-0.5 border transition-all text-center active:scale-95 cursor-pointer ${
                       isSelected
-                        ? 'bg-white text-[#0c1324] border-white shadow-md font-bold'
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40 shadow-sm font-bold'
                         : 'bg-white/5 border-white/10 text-[#dce1fb] hover:bg-white/10'
                     }`}
                   >
@@ -161,9 +161,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     key={curr.code}
                     type="button"
                     onClick={() => setDefaultCurrency(curr.code)}
-                    className={`min-h-[48px] min-w-[76px] px-3 py-2 rounded-xl border flex flex-col items-center justify-center shrink-0 transition-all active:scale-95 ${
+                    className={`min-h-[48px] min-w-[76px] px-3 py-2 rounded-xl border flex flex-col items-center justify-center shrink-0 transition-all active:scale-95 cursor-pointer ${
                       isSelected
-                        ? 'bg-white text-[#0c1324] font-bold border-white shadow-sm'
+                        ? 'bg-emerald-500/20 text-emerald-300 font-bold border-emerald-400/40 shadow-sm'
                         : 'bg-white/5 border-white/10 text-[#c4c7c8] hover:text-white hover:bg-white/10'
                     }`}
                   >
@@ -201,9 +201,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   key={pct}
                   type="button"
                   onClick={() => setDefaultTip(pct)}
-                  className={`min-h-[48px] rounded-xl text-xs font-mono font-bold transition-all active:scale-95 flex items-center justify-center ${
+                  className={`min-h-[48px] rounded-xl text-xs font-mono font-bold transition-all active:scale-95 flex items-center justify-center cursor-pointer ${
                     defaultTip === pct
-                      ? 'bg-white text-[#0c1324] shadow-sm font-bold'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-sm font-bold'
                       : 'bg-white/5 text-[#c4c7c8] border border-white/10 hover:text-white'
                   }`}
                 >
@@ -230,9 +230,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <button
                 type="button"
                 onClick={() => setPreTaxTipping(true)}
-                className={`min-h-[48px] rounded-xl text-xs font-mono font-bold border transition-all flex flex-col items-center justify-center ${
+                className={`min-h-[48px] rounded-xl text-xs font-mono font-bold border transition-all flex flex-col items-center justify-center cursor-pointer ${
                   preTaxTipping
-                    ? 'bg-white text-[#0c1324] border-white shadow-md'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40 shadow-sm'
                     : 'bg-white/5 border-white/10 text-[#c4c7c8] hover:text-white'
                 }`}
               >
@@ -243,9 +243,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <button
                 type="button"
                 onClick={() => setPreTaxTipping(false)}
-                className={`min-h-[48px] rounded-xl text-xs font-mono font-bold border transition-all flex flex-col items-center justify-center ${
+                className={`min-h-[48px] rounded-xl text-xs font-mono font-bold border transition-all flex flex-col items-center justify-center cursor-pointer ${
                   !preTaxTipping
-                    ? 'bg-white text-[#0c1324] border-white shadow-md'
+                    ? 'bg-amber-400/20 text-amber-300 border-amber-400/40 shadow-sm'
                     : 'bg-white/5 border-white/10 text-[#c4c7c8] hover:text-white'
                 }`}
               >
@@ -274,7 +274,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               }`}
             >
               <div className={`w-6 h-6 rounded-full transition-transform absolute top-0.5 ${
-                roundTotal ? 'translate-x-7 bg-[#0c1324]' : 'translate-x-1 bg-white/70'
+                roundTotal ? 'translate-x-7 bg-[#0B0F19]' : 'translate-x-1 bg-white/70'
               }`} />
             </button>
           </div>
@@ -322,11 +322,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <button
             type="button"
             onClick={handleSave}
-            className="w-full min-h-[52px] bg-white text-[#0c1324] font-display font-bold text-sm rounded-2xl flex items-center justify-center gap-2 hover:bg-white/90 active:scale-98 transition-all shadow-xl"
+            className="w-full min-h-[52px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] font-display font-black text-sm rounded-2xl flex items-center justify-center gap-2 hover:brightness-105 active:scale-98 transition-all shadow-[0_0_20px_rgba(251,191,36,0.3)] cursor-pointer"
           >
             {savedSuccess ? (
               <>
-                <Check className="w-5 h-5 text-emerald-600" />
+                <Check className="w-5 h-5 stroke-[2.5]" />
                 <span>Preferences Saved!</span>
               </>
             ) : (
@@ -342,8 +342,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* Overlapping Confirmation Modal */}
         {showDeleteConfirm && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center p-5 bg-[#0c1324]/90 backdrop-blur-lg rounded-3xl animate-fade-in">
-            <div className="w-full glass-card border border-rose-500/30 bg-[#0c1324] p-6 rounded-2xl shadow-2xl text-center flex flex-col gap-4">
+          <div className="absolute inset-0 z-50 flex items-center justify-center p-5 bg-[#0B0F19]/90 backdrop-blur-lg rounded-3xl animate-fade-in">
+            <div className="w-full glass-card border border-rose-500/30 bg-[#0B0F19] p-6 rounded-2xl shadow-2xl text-center flex flex-col gap-4">
               <div className="w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(244,63,94,0.15)]">
                 <span className="text-2xl">⚠️</span>
               </div>

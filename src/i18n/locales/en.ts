@@ -244,7 +244,10 @@ export const en = {
     tasksRemaining: 'tasks remaining',
     profileTab: 'Profile Overview',
     tasksTab: 'Dining Tasks',
-    signOut: 'Sign In / Switch Account',
+    signInOrRegister: 'Sign In / Register',
+    switchAccount: 'Switch Account',
+    signOut: 'Sign Out',
+    signOutConfirm: 'Are you sure you want to sign out of your account?',
     deviceEncryptedNotice: 'Local Encrypted Storage on this device',
   },
   settings: {

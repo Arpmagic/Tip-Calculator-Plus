@@ -66,8 +66,8 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
 
         {successCelebration ? (
           <div className="py-12 flex flex-col items-center justify-center text-center space-y-4 animate-fade-in">
-            <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-400 via-yellow-300 to-amber-500 flex items-center justify-center text-[#0c1324] shadow-[0_0_40px_rgba(251,191,36,0.7)] animate-bounce">
-              <Crown className="w-10 h-10 fill-[#0c1324]" />
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-400 via-yellow-300 to-amber-500 flex items-center justify-center text-[#0B0F19] shadow-[0_0_40px_rgba(251,191,36,0.7)] animate-bounce">
+              <Crown className="w-10 h-10 fill-[#0B0F19]" />
             </div>
             <h3 className="font-display font-extrabold text-2xl text-white">{t.paywall.badge}</h3>
             <p className="font-mono text-xs text-emerald-400 max-w-xs">
@@ -81,9 +81,9 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
             <div className="text-center space-y-2.5 pt-1">
               <div className="relative inline-flex items-center justify-center">
                 <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-400 via-yellow-300 to-amber-500 border border-amber-200/60 flex items-center justify-center shadow-[0_0_35px_rgba(251,191,36,0.45)] transform hover:scale-105 transition-transform duration-300">
-                  <Crown className="w-9 h-9 text-[#0c1324] fill-[#0c1324]" />
+                  <Crown className="w-9 h-9 text-[#0B0F19] fill-[#0B0F19]" />
                 </div>
-                <span className="absolute -bottom-2 px-2.5 py-0.5 rounded-full bg-[#0c1324] border border-amber-400/50 text-[10px] font-mono font-black text-amber-300 tracking-wider uppercase shadow-md">
+                <span className="absolute -bottom-2 px-2.5 py-0.5 rounded-full bg-[#0B0F19] border border-amber-400/50 text-[10px] font-mono font-black text-amber-300 tracking-wider uppercase shadow-md">
                   PRO
                 </span>
               </div>
@@ -144,14 +144,14 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                 }`}
               >
                 {/* Best Value Ribbon Badge */}
-                <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-400 to-yellow-400 text-[#0c1324] text-[9px] font-mono font-black uppercase px-2.5 py-0.5 rounded-bl-xl shadow-md">
+                <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-400 to-yellow-400 text-[#0B0F19] text-[9px] font-mono font-black uppercase px-2.5 py-0.5 rounded-bl-xl shadow-md">
                   BEST VALUE • FOREVER
                 </div>
 
                 <div className="flex items-center gap-3">
                   <div className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
                     selectedPlan === 'lifetime' 
-                      ? 'border-amber-400 bg-amber-400 text-[#0c1324]' 
+                      ? 'border-amber-400 bg-amber-400 text-[#0B0F19]' 
                       : 'border-white/30 bg-transparent'
                   }`}>
                     {selectedPlan === 'lifetime' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -215,7 +215,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                 id="btn-confirm-purchase"
                 disabled={isProcessing}
                 onClick={handlePurchase}
-                className="w-full h-14 min-h-[56px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0c1324] font-display font-black text-base rounded-2xl flex items-center justify-center gap-2.5 shadow-[0_0_35px_rgba(251,191,36,0.4)] hover:brightness-105 active:scale-[0.97] transition-all duration-150 relative overflow-hidden cursor-pointer"
+                className="w-full h-14 min-h-[56px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] font-display font-black text-base rounded-2xl flex items-center justify-center gap-2.5 shadow-[0_0_35px_rgba(251,191,36,0.4)] hover:brightness-105 active:scale-[0.97] transition-all duration-150 relative overflow-hidden cursor-pointer"
               >
                 {/* Shimmer sweep */}
                 <div className="absolute inset-0 animate-shimmer pointer-events-none" />
@@ -224,7 +224,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                   <span className="font-mono text-sm">{t.common.loading}</span>
                 ) : (
                   <>
-                    <Zap className="w-5 h-5 fill-[#0c1324]" />
+                    <Zap className="w-5 h-5 fill-[#0B0F19]" />
                     <span>{t.paywall.unlockBtn}</span>
                     <ArrowRight className="w-4 h-4 stroke-[3]" />
                   </>

@@ -322,7 +322,7 @@ export const ItemizedSplit: React.FC<ItemizedSplitProps> = ({
             />
             <button
               type="submit"
-              className="min-h-[44px] px-4 rounded-xl bg-white text-[#0c1324] font-display font-bold text-xs hover:bg-white/90 active:scale-95 transition-all shadow-md"
+              className="min-h-[44px] px-4 rounded-xl bg-emerald-400 text-[#0B0F19] font-display font-extrabold text-xs hover:bg-emerald-300 active:scale-95 transition-all shadow-[0_0_12px_rgba(16,185,129,0.3)]"
             >
               {t.common.save}
             </button>
@@ -411,7 +411,7 @@ export const ItemizedSplit: React.FC<ItemizedSplitProps> = ({
 
           <button
             type="submit"
-            className="w-12 h-12 min-w-[48px] min-h-[48px] bg-white text-[#0c1324] rounded-2xl flex items-center justify-center hover:bg-white/90 active:scale-95 transition-all shadow-[0_0_15px_rgba(255,255,255,0.2)] shrink-0 cursor-pointer"
+            className="w-12 h-12 min-w-[48px] min-h-[48px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] rounded-2xl flex items-center justify-center hover:brightness-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(251,191,36,0.3)] shrink-0 cursor-pointer"
             title="Add item"
           >
             <Plus className="w-5 h-5 stroke-[2.5]" />
@@ -525,11 +525,11 @@ export const ItemizedSplit: React.FC<ItemizedSplitProps> = ({
               onChange={(e) => setTaxRatePercent(parseFloat(e.target.value))}
               className="bg-transparent text-xs font-mono font-bold text-white border-none outline-none cursor-pointer mt-0.5"
             >
-              <option value="0" className="bg-[#0c1324]">0%</option>
-              <option value="5" className="bg-[#0c1324]">5%</option>
-              <option value="8.5" className="bg-[#0c1324]">8.5% (US Avg)</option>
-              <option value="10" className="bg-[#0c1324]">10%</option>
-              <option value="20" className="bg-[#0c1324]">20% (VAT)</option>
+              <option value="0" className="bg-[#0B0F19]">0%</option>
+              <option value="5" className="bg-[#0B0F19]">5%</option>
+              <option value="8.5" className="bg-[#0B0F19]">8.5% (US Avg)</option>
+              <option value="10" className="bg-[#0B0F19]">10%</option>
+              <option value="20" className="bg-[#0B0F19]">20% (VAT)</option>
             </select>
           </div>
 
@@ -542,12 +542,12 @@ export const ItemizedSplit: React.FC<ItemizedSplitProps> = ({
               onChange={(e) => setTipPercent(parseFloat(e.target.value))}
               className="bg-transparent text-xs font-mono font-bold text-emerald-400 border-none outline-none cursor-pointer mt-0.5"
             >
-              <option value="0" className="bg-[#0c1324]">0%</option>
-              <option value="10" className="bg-[#0c1324]">10%</option>
-              <option value="15" className="bg-[#0c1324]">15%</option>
-              <option value="18" className="bg-[#0c1324]">18%</option>
-              <option value="20" className="bg-[#0c1324]">20%</option>
-              <option value="25" className="bg-[#0c1324]">25%</option>
+              <option value="0" className="bg-[#0B0F19]">0%</option>
+              <option value="10" className="bg-[#0B0F19]">10%</option>
+              <option value="15" className="bg-[#0B0F19]">15%</option>
+              <option value="18" className="bg-[#0B0F19]">18%</option>
+              <option value="20" className="bg-[#0B0F19]">20%</option>
+              <option value="25" className="bg-[#0B0F19]">25%</option>
             </select>
           </div>
         </div>
@@ -563,7 +563,7 @@ export const ItemizedSplit: React.FC<ItemizedSplitProps> = ({
       {/* 6. PRIMARY CTA: CALCULATE SPLIT (56dp Thumb Zone Action) */}
       <button
         onClick={() => setShowSummaryModal(true)}
-        className="w-full h-14 min-h-[56px] bg-white text-[#0c1324] font-display font-black text-base rounded-2xl flex items-center justify-center gap-2.5 hover:bg-white/90 active:scale-[0.97] transition-all shadow-[0_0_30px_rgba(255,255,255,0.25)] cursor-pointer"
+        className="w-full h-14 min-h-[56px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] font-display font-black text-base rounded-2xl flex items-center justify-center gap-2.5 hover:brightness-105 active:scale-[0.97] transition-all shadow-[0_0_30px_rgba(251,191,36,0.35)] cursor-pointer"
       >
         <span>{t.itemized.summaryTitle}</span>
         <ArrowRight className="w-5 h-5 stroke-[2.5]" />
@@ -700,8 +700,8 @@ export const ItemizedSplit: React.FC<ItemizedSplitProps> = ({
                   onClick={handleSaveToHistory}
                   className={`flex-1 min-h-[48px] rounded-2xl font-display font-extrabold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] ${
                     savedStatus
-                      ? 'bg-emerald-500 text-[#0c1324]'
-                      : 'bg-white text-[#0c1324] hover:bg-white/90 shadow-lg'
+                      ? 'bg-emerald-500 text-[#0B0F19] shadow-[0_0_20px_rgba(16,185,129,0.4)]'
+                      : 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] hover:brightness-105 shadow-[0_0_20px_rgba(251,191,36,0.3)]'
                   }`}
                 >
                   {savedStatus ? (

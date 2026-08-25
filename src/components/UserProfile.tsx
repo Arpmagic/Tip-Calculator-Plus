@@ -10,6 +10,8 @@ import {
   ShieldCheck, 
   Edit3, 
   LogOut, 
+  LogIn,
+  RefreshCw,
   Sparkles,
   Calendar,
   Wallet,
@@ -30,6 +32,7 @@ interface UserProfileProps {
   history: CalculationHistoryItem[];
   onOpenAuth: () => void;
   onOpenPaywall: () => void;
+  onLogout?: () => void;
 }
 
 export const UserProfile: React.FC<UserProfileProps> = ({
@@ -42,6 +45,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   history,
   onOpenAuth,
   onOpenPaywall,
+  onLogout,
 }) => {
   const { language, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'profile' | 'tasks'>('profile');
@@ -113,7 +117,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
           onClick={() => setActiveTab('profile')}
           className={`relative z-10 flex-1 min-h-[48px] py-2.5 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] ${
             activeTab === 'profile'
-              ? 'bg-white text-[#0c1324] shadow-md'
+              ? 'bg-white text-[#0B0F19] shadow-md'
               : 'text-[#c4c7c8] hover:text-white'
           }`}
         >
@@ -126,7 +130,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
           onClick={() => setActiveTab('tasks')}
           className={`relative z-10 flex-1 min-h-[48px] py-2.5 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] ${
             activeTab === 'tasks'
-              ? 'bg-white text-[#0c1324] shadow-md'
+              ? 'bg-white text-[#0B0F19] shadow-md'
               : 'text-[#c4c7c8] hover:text-white'
           }`}
         >
@@ -134,7 +138,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
           <span>{t.profile.tasksTab}</span>
           {pendingTasksCount > 0 && (
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-black ${
-              activeTab === 'tasks' ? 'bg-[#0c1324] text-white' : 'bg-amber-400 text-[#0c1324]'
+              activeTab === 'tasks' ? 'bg-[#0B0F19] text-white' : 'bg-amber-400 text-[#0B0F19]'
             }`}>
               {pendingTasksCount}
             </span>
@@ -166,7 +170,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                     )}
                   </div>
                   {user.isPro && (
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 flex items-center justify-center text-[#0c1324] shadow-md border-2 border-[#0c1324]">
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 flex items-center justify-center text-[#0B0F19] shadow-md border-2 border-[#0B0F19]">
                       <span className="text-[10px]">👑</span>
                     </div>
                   )}
@@ -186,7 +190,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                         />
                         <button 
                           type="submit" 
-                          className="min-h-[44px] px-3.5 rounded-xl bg-emerald-400 text-[#0c1324] text-xs font-mono font-bold hover:bg-emerald-300 transition-colors"
+                          className="min-h-[44px] px-3.5 rounded-xl bg-emerald-400 text-[#0B0F19] text-xs font-mono font-bold hover:bg-emerald-300 transition-colors"
                         >
                           {t.profile.saveName}
                         </button>
@@ -236,15 +240,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({
               </div>
             </div>
 
-            {/* Quick Actions (Upgrade to PRO metallic gold & Sign In secondary frosted glass) */}
+            {/* Quick Actions (Upgrade to PRO metallic gold & Sign In / Switch / Logout) */}
             <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-white/10 relative z-10">
               {!user.isPro ? (
                 <button
                   id="profile-upgrade-btn"
                   onClick={onOpenPaywall}
-                  className="flex-1 min-h-[48px] py-3 px-5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0c1324] font-display font-extrabold text-sm flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(251,191,36,0.35)] hover:brightness-105 active:scale-[0.97] transition-all duration-150 cursor-pointer"
+                  className="flex-1 min-h-[48px] py-3 px-5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] font-display font-extrabold text-sm flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(251,191,36,0.35)] hover:brightness-105 active:scale-[0.97] transition-all duration-150 cursor-pointer"
                 >
-                  <Sparkles className="w-4 h-4 fill-[#0c1324]" />
+                  <Sparkles className="w-4 h-4 fill-[#0B0F19]" />
                   <span>{t.profile.upgradeToPro}</span>
                 </button>
               ) : (
@@ -254,14 +258,44 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 </div>
               )}
 
-              <button
-                id="profile-auth-switch-btn"
-                onClick={onOpenAuth}
-                className="min-h-[48px] py-3 px-5 rounded-2xl bg-white/[0.07] hover:bg-white/[0.12] active:bg-white/[0.15] border border-white/[0.12] text-xs font-mono font-semibold text-[#dce1fb] hover:text-white flex items-center justify-center gap-2 active:scale-[0.97] transition-all duration-150"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>{t.profile.signOut}</span>
-              </button>
+              {user.isGuest ? (
+                /* GUEST USER: Primary Sign In / Register button */
+                <button
+                  id="profile-auth-signin-btn"
+                  onClick={onOpenAuth}
+                  className="min-h-[48px] py-3 px-5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] active:bg-white/[0.2] border border-white/[0.15] text-xs font-mono font-bold text-white flex items-center justify-center gap-2 active:scale-[0.97] transition-all duration-150 cursor-pointer shadow-md"
+                >
+                  <LogIn className="w-4 h-4 text-emerald-400" />
+                  <span>{t.profile.signInOrRegister || 'Sign In / Register'}</span>
+                </button>
+              ) : (
+                /* AUTHENTICATED USER: Frosted Glass Switch Account + Destructive Crimson Glass Sign Out */
+                <div className="flex items-center gap-2">
+                  <button
+                    id="profile-auth-switch-btn"
+                    onClick={onOpenAuth}
+                    className="min-h-[48px] py-3 px-3.5 rounded-2xl bg-white/[0.07] hover:bg-white/[0.12] active:bg-white/[0.15] border border-white/[0.12] text-xs font-mono font-semibold text-[#dce1fb] hover:text-white flex items-center justify-center gap-1.5 active:scale-[0.97] transition-all duration-150 cursor-pointer"
+                    title={t.profile.switchAccount || 'Switch Account'}
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-[#c4c7c8]" />
+                    <span>{t.profile.switchAccount || 'Switch'}</span>
+                  </button>
+
+                  <button
+                    id="profile-auth-logout-btn"
+                    onClick={() => {
+                      if (confirm(t.profile.signOutConfirm || 'Are you sure you want to sign out?')) {
+                        onLogout?.();
+                      }
+                    }}
+                    className="min-h-[48px] py-3 px-3.5 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 active:bg-rose-500/25 border border-rose-500/30 text-xs font-mono font-semibold text-rose-300 hover:text-rose-200 flex items-center justify-center gap-1.5 active:scale-[0.97] transition-all duration-150 cursor-pointer"
+                    title={t.profile.signOut}
+                  >
+                    <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                    <span>{t.profile.signOut}</span>
+                  </button>
+                </div>
+              )}
             </div>
           </section>
 
@@ -330,7 +364,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 
             <button
               onClick={() => setShowAddTaskModal(true)}
-              className="min-h-[48px] px-4 rounded-2xl bg-white text-[#0c1324] font-display font-extrabold text-xs flex items-center gap-1.5 hover:bg-white/90 active:scale-[0.97] transition-all shadow-md cursor-pointer"
+              className="min-h-[48px] px-4 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] font-display font-extrabold text-xs flex items-center gap-1.5 hover:brightness-105 active:scale-[0.97] transition-all shadow-[0_0_16px_rgba(251,191,36,0.3)] cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>{t.tasks.addNewTask}</span>
@@ -341,9 +375,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({
           <div className="flex gap-2 text-xs font-mono">
             <button
               onClick={() => setTaskFilter('all')}
-              className={`flex-1 min-h-[48px] px-3.5 py-2 rounded-xl border transition-all flex items-center justify-center font-bold active:scale-[0.97] ${
+              className={`flex-1 min-h-[48px] px-3.5 py-2 rounded-xl border transition-all flex items-center justify-center font-bold active:scale-[0.97] cursor-pointer ${
                 taskFilter === 'all'
-                  ? 'bg-white text-[#0c1324] border-white shadow-sm'
+                  ? 'bg-white/15 text-white border-white/30 shadow-sm'
                   : 'bg-white/5 text-[#c4c7c8] border-white/10 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -351,9 +385,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             </button>
             <button
               onClick={() => setTaskFilter('pending')}
-              className={`flex-1 min-h-[48px] px-3.5 py-2 rounded-xl border transition-all flex items-center justify-center font-bold active:scale-[0.97] ${
+              className={`flex-1 min-h-[48px] px-3.5 py-2 rounded-xl border transition-all flex items-center justify-center font-bold active:scale-[0.97] cursor-pointer ${
                 taskFilter === 'pending'
-                  ? 'bg-white text-[#0c1324] border-white shadow-sm'
+                  ? 'bg-amber-400/20 text-amber-300 border-amber-400/40 shadow-sm'
                   : 'bg-white/5 text-[#c4c7c8] border-white/10 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -361,9 +395,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             </button>
             <button
               onClick={() => setTaskFilter('completed')}
-              className={`flex-1 min-h-[48px] px-3.5 py-2 rounded-xl border transition-all flex items-center justify-center font-bold active:scale-[0.97] ${
+              className={`flex-1 min-h-[48px] px-3.5 py-2 rounded-xl border transition-all flex items-center justify-center font-bold active:scale-[0.97] cursor-pointer ${
                 taskFilter === 'completed'
-                  ? 'bg-white text-[#0c1324] border-white shadow-sm'
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40 shadow-sm'
                   : 'bg-white/5 text-[#c4c7c8] border-white/10 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -392,12 +426,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                       onClick={() => onToggleTask(task.id)}
                       className={`w-8 h-8 min-w-[32px] min-h-[32px] rounded-xl border mt-0.5 flex items-center justify-center transition-all active:scale-90 ${
                         task.completed
-                          ? 'bg-emerald-500 border-emerald-400 text-[#0c1324]'
+                          ? 'bg-emerald-500 border-emerald-400 text-[#0B0F19]'
                           : 'border-white/30 hover:border-white'
                       }`}
                       aria-label="Toggle task completed"
                     >
-                      {task.completed && <CheckCircle2 className="w-5 h-5 fill-[#0c1324] text-white" />}
+                      {task.completed && <CheckCircle2 className="w-5 h-5 fill-[#0B0F19] text-emerald-400" />}
                     </button>
 
                     <div>
@@ -475,7 +509,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                       <select
                         value={newTaskCategory}
                         onChange={(e) => setNewTaskCategory(e.target.value as any)}
-                        className="w-full glass-panel rounded-xl px-3 py-2.5 text-xs text-white bg-[#0c1324] border border-white/15 outline-none min-h-[48px]"
+                        className="w-full glass-panel rounded-xl px-3 py-2.5 text-xs text-white bg-[#0B0F19] border border-white/15 outline-none min-h-[48px]"
                       >
                         <option value="split">{t.tasks.categorySplit}</option>
                         <option value="expense">{t.tasks.categoryExpense}</option>
@@ -499,7 +533,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 
                   <button
                     type="submit"
-                    className="w-full min-h-[48px] bg-white text-[#0c1324] font-display font-extrabold text-xs sm:text-sm rounded-xl flex items-center justify-center gap-2 hover:bg-white/90 active:scale-[0.97] transition-all shadow-md cursor-pointer"
+                    className="w-full min-h-[48px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] font-display font-extrabold text-xs sm:text-sm rounded-xl flex items-center justify-center gap-2 hover:brightness-105 active:scale-[0.97] transition-all shadow-[0_0_16px_rgba(251,191,36,0.3)] cursor-pointer"
                   >
                     <span>{t.tasks.createTaskBtn}</span>
                   </button>

@@ -131,7 +131,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="min-h-[48px] px-4 rounded-2xl bg-white text-[#0c1324] font-display font-black text-xs flex items-center gap-1.5 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:bg-white/90 active:scale-[0.97] transition-all cursor-pointer"
+          className="min-h-[48px] px-4 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] font-display font-black text-xs flex items-center gap-1.5 shadow-[0_0_20px_rgba(251,191,36,0.3)] hover:brightness-105 active:scale-[0.97] transition-all cursor-pointer"
           aria-label="Add new dining task"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
@@ -201,12 +201,12 @@ export const TasksView: React.FC<TasksViewProps> = ({
               onClick={() => setFilter(tab.id as any)}
               className={`min-h-[48px] rounded-2xl text-xs font-mono font-bold flex flex-col items-center justify-center transition-all active:scale-95 cursor-pointer ${
                 isActive
-                  ? 'bg-white text-[#0c1324] shadow-md border-white'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
                   : 'bg-white/5 text-[#c4c7c8] border border-white/10 hover:bg-white/10 hover:text-white'
               }`}
             >
               <span>{tab.label}</span>
-              <span className={`text-[10px] font-normal ${isActive ? 'text-[#0c1324]/70' : 'text-[#c4c7c8]/60'}`}>
+              <span className={`text-[10px] font-normal ${isActive ? 'text-emerald-300/80' : 'text-[#c4c7c8]/60'}`}>
                 ({tab.count})
               </span>
             </button>
@@ -259,12 +259,12 @@ export const TasksView: React.FC<TasksViewProps> = ({
                       onClick={() => onToggleTask(task.id)}
                       className={`min-w-[48px] min-h-[48px] rounded-2xl border flex items-center justify-center transition-all active:scale-90 ${
                         task.completed
-                          ? 'bg-emerald-500 border-emerald-400 text-[#0c1324] shadow-[0_0_15px_rgba(52,211,153,0.4)]'
+                          ? 'bg-emerald-500 border-emerald-400 text-[#0B0F19] shadow-[0_0_15px_rgba(52,211,153,0.4)]'
                           : 'border-white/20 bg-white/5 hover:border-white/40 text-transparent'
                       }`}
                       aria-label={task.completed ? "Mark pending" : "Mark settled"}
                     >
-                      <CheckCircle2 className={`w-6 h-6 ${task.completed ? 'text-[#0c1324] fill-[#0c1324]' : 'text-white/20'}`} />
+                      <CheckCircle2 className={`w-6 h-6 ${task.completed ? 'text-[#0B0F19] fill-[#0B0F19]' : 'text-white/20'}`} />
                     </button>
 
                     <div className="flex-1 min-w-0">
@@ -383,7 +383,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
                     onClick={() => setTaskType('receivable')}
                     className={`min-h-[48px] rounded-2xl font-mono text-xs font-bold border transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer ${
                       taskType === 'receivable'
-                        ? 'bg-emerald-500 text-[#0c1324] border-emerald-400 shadow-md font-bold'
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40 shadow-sm font-bold'
                         : 'bg-white/5 border-white/10 text-[#c4c7c8] hover:text-white'
                     }`}
                   >
@@ -395,7 +395,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
                     onClick={() => setTaskType('payable')}
                     className={`min-h-[48px] rounded-2xl font-mono text-xs font-bold border transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer ${
                       taskType === 'payable'
-                        ? 'bg-amber-400 text-[#0c1324] border-amber-300 shadow-md font-bold'
+                        ? 'bg-amber-400/20 text-amber-300 border-amber-400/40 shadow-sm font-bold'
                         : 'bg-white/5 border-white/10 text-[#c4c7c8] hover:text-white'
                     }`}
                   >
@@ -466,7 +466,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
 
               <button
                 type="submit"
-                className="w-full min-h-[48px] bg-white text-[#0c1324] font-display font-extrabold text-sm rounded-2xl flex items-center justify-center gap-2 hover:bg-white/90 active:scale-[0.97] transition-all shadow-lg mt-2 cursor-pointer"
+                className="w-full min-h-[48px] bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] font-display font-extrabold text-sm rounded-2xl flex items-center justify-center gap-2 hover:brightness-105 active:scale-[0.97] transition-all shadow-[0_0_16px_rgba(251,191,36,0.3)] mt-2 cursor-pointer"
               >
                 <span>Save Split Task</span>
               </button>

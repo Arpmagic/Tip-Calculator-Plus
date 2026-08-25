@@ -44,9 +44,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setTimeout(() => {
       const updatedUser: UserProfile = {
         ...currentUser,
-        name: mode === 'signup' ? name || 'User' : (currentUser.name !== 'Guest User' ? currentUser.name : (name || 'User')),
-        email: email,
+        name: mode === 'signup' ? (name.trim() || 'User') : (currentUser.name !== 'Guest User' ? currentUser.name : (name.trim() || 'Alex')),
+        email: email.trim(),
         id: currentUser.id || `user_${Date.now()}`,
+        isGuest: false,
       };
       onAuthSuccess(updatedUser);
       setStatusMessage(null);
@@ -58,7 +59,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     const guestUser: UserProfile = {
       ...currentUser,
       name: 'Guest User',
-      email: 'guest@device.local',
+      email: '',
+      isGuest: true,
       isPro: false,
     };
     onAuthSuccess(guestUser);
@@ -96,14 +98,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
 
         {/* Tab switcher */}
-        <div className="flex bg-surface-container-high/60 rounded-xl p-1 mb-6 border border-white/5">
+        <div className="flex bg-white/5 rounded-xl p-1 mb-6 border border-white/10">
           <button
             type="button"
             onClick={() => setMode('signin')}
-            className={`flex-1 py-2 rounded-lg text-xs font-mono transition-all ${
+            className={`flex-1 py-2 rounded-lg text-xs font-mono transition-all cursor-pointer ${
               mode === 'signin'
-                ? 'bg-white text-[#0c1324] font-bold shadow-sm'
-                : 'text-[#c4c7c8] hover:text-white'
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-bold shadow-sm'
+                : 'text-[#c4c7c8] hover:text-white border border-transparent'
             }`}
           >
             {t.auth.signInTitle}
@@ -111,10 +113,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button
             type="button"
             onClick={() => setMode('signup')}
-            className={`flex-1 py-2 rounded-lg text-xs font-mono transition-all ${
+            className={`flex-1 py-2 rounded-lg text-xs font-mono transition-all cursor-pointer ${
               mode === 'signup'
-                ? 'bg-white text-[#0c1324] font-bold shadow-sm'
-                : 'text-[#c4c7c8] hover:text-white'
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-bold shadow-sm'
+                : 'text-[#c4c7c8] hover:text-white border border-transparent'
             }`}
           >
             {t.auth.signUpTitle}
@@ -128,17 +130,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <label className="block text-[11px] font-mono uppercase text-[#c4c7c8] mb-1.5 ml-1">
                 {t.auth.fullName}
               </label>
-              <div className="glass-panel rounded-xl px-3.5 py-2.5 flex items-center gap-2.5 border border-white/10 focus-within:border-white/30 transition-all">
-                <UserIcon className="w-4 h-4 text-[#c4c7c8]" />
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Alex Doe"
-                  className="bg-transparent border-none outline-none text-sm text-white w-full placeholder:text-white/20 p-0"
-                />
-              </div>
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Alex Henderson"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all font-mono"
+              />
             </div>
           )}
 
@@ -146,48 +145,37 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <label className="block text-[11px] font-mono uppercase text-[#c4c7c8] mb-1.5 ml-1">
               {t.auth.email}
             </label>
-            <div className="glass-panel rounded-xl px-3.5 py-2.5 flex items-center gap-2.5 border border-white/10 focus-within:border-white/30 transition-all">
-              <Mail className="w-4 h-4 text-[#c4c7c8]" />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="alex.dining@onyx.finance"
-                className="bg-transparent border-none outline-none text-sm text-white w-full placeholder:text-white/20 p-0"
-              />
-            </div>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="alex.dining@onyx.finance"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all font-mono"
+            />
           </div>
 
           <div>
-            <div className="flex justify-between items-center mb-1.5 ml-1">
-              <label className="text-[11px] font-mono uppercase text-[#c4c7c8]">
-                {t.auth.password}
-              </label>
-            </div>
-            <div className="glass-panel rounded-xl px-3.5 py-2.5 flex items-center gap-2.5 border border-white/10 focus-within:border-white/30 transition-all">
-              <Lock className="w-4 h-4 text-[#c4c7c8]" />
+            <label className="block text-[11px] font-mono uppercase text-[#c4c7c8] mb-1.5 ml-1">
+              {t.auth.password}
+            </label>
+            <div className="relative flex items-center">
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="bg-transparent border-none outline-none text-sm text-white w-full placeholder:text-white/20 p-0"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all font-mono pr-12"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 text-[#c4c7c8] hover:text-white p-1"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-1">
-            <label className="flex items-center gap-2 cursor-pointer text-xs text-[#c4c7c8]">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-3.5 h-3.5 rounded bg-white/10 border-white/20 text-white focus:ring-0"
-              />
-              <span>{t.auth.fastBiometric}</span>
-            </label>
           </div>
 
           {statusMessage && (
@@ -200,10 +188,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button
             type="submit"
             id="auth-submit-btn"
-            className="w-full h-12 mt-2 bg-white text-[#0c1324] font-display font-bold text-sm rounded-xl flex items-center justify-center gap-2 hover:bg-white/90 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+            className="w-full h-12 mt-2 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] font-display font-black text-sm rounded-xl flex items-center justify-center gap-2 hover:brightness-105 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(251,191,36,0.3)] cursor-pointer"
           >
             <span>{mode === 'signin' ? t.auth.signInBtn : t.auth.signUpBtn}</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4 stroke-[3]" />
           </button>
         </form>
 
