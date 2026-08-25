@@ -316,8 +316,8 @@ export const MainCalculator: React.FC<MainCalculatorProps> = ({
                   onClick={() => handleSelectPreset(pct)}
                   className={`flex-1 min-h-[48px] rounded-xl font-display text-sm font-bold transition-all duration-150 active:scale-95 flex items-center justify-center cursor-pointer ${
                     isSelected
-                      ? 'bg-white text-[#0c1324] shadow-md scale-[1.02]'
-                      : 'text-[#dce1fb] hover:text-white hover:bg-white/10'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-[0_0_16px_rgba(16,185,129,0.25)] scale-[1.02]'
+                      : 'text-[#dce1fb] hover:text-white hover:bg-white/10 border border-transparent'
                   }`}
                 >
                   {pct}%
@@ -332,8 +332,8 @@ export const MainCalculator: React.FC<MainCalculatorProps> = ({
               onClick={() => setIsCustomTip(true)}
               className={`flex-1 min-h-[48px] rounded-xl font-display text-xs sm:text-sm font-bold transition-all duration-150 active:scale-95 flex items-center justify-center whitespace-nowrap cursor-pointer ${
                 isCustomTip
-                  ? 'bg-white text-[#0c1324] shadow-md scale-[1.02]'
-                  : 'text-[#c4c7c8] hover:text-white hover:bg-white/10'
+                  ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40 shadow-[0_0_16px_rgba(251,191,36,0.25)] scale-[1.02]'
+                  : 'text-[#c4c7c8] hover:text-white hover:bg-white/10 border border-transparent'
               }`}
             >
               {isCustomTip ? `${customTipStr}%` : t.calculator.customTip}
@@ -365,18 +365,18 @@ export const MainCalculator: React.FC<MainCalculatorProps> = ({
             type="button"
             id="toggle-advanced-options-btn"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="w-full min-h-[48px] px-4 py-3 flex items-center justify-between text-xs font-mono text-[#c4c7c8] hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+            className="w-full min-h-[48px] px-4 py-3 flex items-center justify-between gap-2 text-xs font-mono text-[#c4c7c8] hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
           >
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4 text-emerald-400" />
-              <span className="font-bold text-white text-xs">{t.calculator.advancedOptions}</span>
+            <div className="flex items-center gap-2 shrink-0">
+              <SlidersHorizontal className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span className="font-bold text-white text-xs whitespace-nowrap">{t.calculator.advancedOptions}</span>
               {hasActiveAdvanced && (
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
               )}
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs text-[#c4c7c8]/80">
-              <span>{showAdvanced ? t.common.close : t.calculator.advancedOptionsDesc}</span>
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-[#c4c7c8]/80 shrink-0">
+              <span className="hidden sm:inline">{showAdvanced ? t.common.close : t.calculator.advancedOptionsDesc}</span>
               {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </div>
           </button>
@@ -438,8 +438,8 @@ export const MainCalculator: React.FC<MainCalculatorProps> = ({
                     onClick={() => setIsPreTax(true)}
                     className={`min-h-[44px] rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer ${
                       isPreTax
-                        ? 'bg-white text-[#0c1324] shadow-md'
-                        : 'text-[#c4c7c8] hover:text-white'
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+                        : 'text-[#c4c7c8] hover:text-white border border-transparent'
                     }`}
                   >
                     <span>{t.calculator.preTax}</span>
@@ -450,8 +450,8 @@ export const MainCalculator: React.FC<MainCalculatorProps> = ({
                     onClick={() => setIsPreTax(false)}
                     className={`min-h-[44px] rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer ${
                       !isPreTax
-                        ? 'bg-white text-[#0c1324] shadow-md'
-                        : 'text-[#c4c7c8] hover:text-white'
+                        ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40 shadow-[0_0_12px_rgba(251,191,36,0.2)]'
+                        : 'text-[#c4c7c8] hover:text-white border border-transparent'
                     }`}
                   >
                     <span>{t.calculator.postTax}</span>
@@ -507,8 +507,8 @@ export const MainCalculator: React.FC<MainCalculatorProps> = ({
                       onClick={() => setRoundingMode('none')}
                       className={`min-h-[36px] rounded-lg text-[11px] font-mono font-bold transition-all flex items-center justify-center active:scale-95 cursor-pointer ${
                         roundingMode === 'none'
-                          ? 'bg-white text-[#0c1324] shadow-sm'
-                          : 'text-[#c4c7c8] hover:text-white'
+                          ? 'bg-white/15 text-white border border-white/30 shadow-sm'
+                          : 'text-[#c4c7c8] hover:text-white border border-transparent'
                       }`}
                     >
                       Exact
@@ -518,8 +518,8 @@ export const MainCalculator: React.FC<MainCalculatorProps> = ({
                       onClick={() => setRoundingMode('cash')}
                       className={`min-h-[36px] rounded-lg text-[11px] font-mono font-bold transition-all flex items-center justify-center active:scale-95 cursor-pointer ${
                         roundingMode === 'cash'
-                          ? 'bg-amber-400 text-[#0c1324] shadow-sm'
-                          : 'text-[#c4c7c8] hover:text-white'
+                          ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40 shadow-sm'
+                          : 'text-[#c4c7c8] hover:text-white border border-transparent'
                       }`}
                       title={t.calculator.smartRoundDesc}
                     >
@@ -530,8 +530,8 @@ export const MainCalculator: React.FC<MainCalculatorProps> = ({
                       onClick={() => setRoundingMode('palindrome')}
                       className={`min-h-[36px] rounded-lg text-[11px] font-mono font-bold transition-all flex items-center justify-center active:scale-95 cursor-pointer ${
                         roundingMode === 'palindrome'
-                          ? 'bg-emerald-400 text-[#0c1324] shadow-sm'
-                          : 'text-[#c4c7c8] hover:text-white'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-sm'
+                          : 'text-[#c4c7c8] hover:text-white border border-transparent'
                       }`}
                       title="Anti-Fraud Palindromic Total (e.g. $73.37)"
                     >
@@ -547,7 +547,7 @@ export const MainCalculator: React.FC<MainCalculatorProps> = ({
       </section>
 
       {/* 4. BOTTOM THUMB ZONE PRIMARY ACTIONS (56dp CTAs & 8px Grid) */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 pb-4">
         <div className="glass-panel rounded-2xl px-4 py-3 flex items-center gap-3 border border-white/10 bg-white/5 min-h-[48px]">
           <Receipt className="w-4 h-4 text-[#c4c7c8] shrink-0" />
           <input
@@ -565,8 +565,8 @@ export const MainCalculator: React.FC<MainCalculatorProps> = ({
             onClick={handleSaveCalculation}
             className={`flex-1 min-h-[56px] h-14 rounded-2xl font-display font-black text-sm flex items-center justify-center gap-2.5 transition-all active:scale-[0.97] cursor-pointer ${
               savedSuccess
-                ? 'bg-emerald-500 text-[#0c1324] shadow-[0_0_24px_rgba(16,185,129,0.4)]'
-                : 'bg-white text-[#0c1324] hover:bg-white/90 shadow-[0_0_24px_rgba(255,255,255,0.2)]'
+                ? 'bg-emerald-500 text-[#0B0F19] shadow-[0_0_24px_rgba(16,185,129,0.4)]'
+                : 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] hover:brightness-105 shadow-[0_0_24px_rgba(251,191,36,0.3)]'
             }`}
           >
             {savedSuccess ? (
@@ -585,7 +585,7 @@ export const MainCalculator: React.FC<MainCalculatorProps> = ({
           <button
             id="btn-share-calculation"
             onClick={handleShare}
-            className="min-w-[56px] min-h-[56px] w-14 h-14 rounded-2xl glass-button text-white flex items-center justify-center hover:bg-white/10 active:scale-95 transition-all shrink-0 cursor-pointer"
+            className="min-w-[56px] min-h-[56px] w-14 h-14 rounded-2xl bg-white/[0.08] border border-white/[0.12] text-white flex items-center justify-center hover:bg-white/15 active:scale-95 transition-all shrink-0 cursor-pointer"
             title={t.calculator.shareBreakdown}
             aria-label={t.calculator.shareBreakdown}
           >

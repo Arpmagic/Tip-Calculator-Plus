@@ -28,9 +28,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 }) => {
   const { t } = useLanguage();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [name, setName] = useState<string>(currentUser.name || 'Alex');
-  const [email, setEmail] = useState<string>(currentUser.email || 'alex.dining@onyx.finance');
-  const [password, setPassword] = useState<string>('••••••••');
+  const [name, setName] = useState<string>(currentUser.name !== 'Guest User' ? currentUser.name : '');
+  const [email, setEmail] = useState<string>(currentUser.email && currentUser.email !== 'guest@device.local' ? currentUser.email : '');
+  const [password, setPassword] = useState<string>('');
   const [rememberMe, setRememberMe] = useState<boolean>(true);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
@@ -44,7 +44,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setTimeout(() => {
       const updatedUser: UserProfile = {
         ...currentUser,
-        name: mode === 'signup' ? name || 'User' : (currentUser.name || 'Alex'),
+        name: mode === 'signup' ? name || 'User' : (currentUser.name !== 'Guest User' ? currentUser.name : (name || 'User')),
         email: email,
         id: currentUser.id || `user_${Date.now()}`,
       };
@@ -59,7 +59,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       ...currentUser,
       name: 'Guest User',
       email: 'guest@device.local',
-      isPro: true, // give demo Pro preview
+      isPro: false,
     };
     onAuthSuccess(guestUser);
     onClose();

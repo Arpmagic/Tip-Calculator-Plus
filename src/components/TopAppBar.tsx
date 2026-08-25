@@ -26,7 +26,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
   const { t } = useLanguage();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-[#0c1324]/85 backdrop-blur-2xl border-b border-white/[0.08] shadow-sm transition-all pt-safe">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-[#0B0F19]/85 backdrop-blur-2xl border-b border-white/[0.08] shadow-sm transition-all pt-safe">
       <div className="flex items-center justify-between px-4 sm:px-6 h-16 max-w-2xl mx-auto w-full">
         {/* Left: App Title & Brand Identity */}
         <button
@@ -55,7 +55,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
             <button
               id="top-upgrade-pro-btn"
               onClick={onOpenPaywall}
-              className="flex items-center gap-1.5 min-h-[44px] px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0c1324] text-xs font-display font-extrabold transition-all active:scale-95 shadow-[0_0_20px_rgba(251,191,36,0.35)] hover:brightness-105 cursor-pointer"
+              className="flex items-center gap-1.5 min-h-[44px] px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] text-xs font-display font-extrabold transition-all active:scale-95 shadow-[0_0_20px_rgba(251,191,36,0.35)] hover:brightness-105 cursor-pointer"
               aria-label="Upgrade to Pro"
             >
               <Crown className="w-3.5 h-3.5 fill-[#0c1324]" />

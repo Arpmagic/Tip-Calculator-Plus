@@ -233,11 +233,11 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
 
         {/* Torch / Flashlight Button (if supported) */}
         {torchSupported ? (
-          <button
+            <button
             onClick={toggleTorch}
             className={`w-12 h-12 min-w-[48px] min-h-[48px] rounded-full backdrop-blur-xl border flex items-center justify-center pointer-events-auto transition-all active:scale-90 shadow-lg ${
               isTorchOn
-                ? 'bg-amber-400 text-[#0c1324] border-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.5)]'
+                ? 'bg-amber-400 text-[#0B0F19] border-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.5)]'
                 : 'bg-black/50 text-white/80 hover:text-white border-white/20'
             }`}
             title={isTorchOn ? t.scanner.torchOn : t.scanner.torchOff}
@@ -298,7 +298,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
 
             {/* Camera Permission / Error Fallback Prompt */}
             {(!hasCamera || cameraError) && (
-              <div className="absolute inset-0 bg-[#0c1324]/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-30 pointer-events-auto gap-4">
+              <div className="absolute inset-0 bg-[#0B0F19]/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-30 pointer-events-auto gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-[#c4c7c8]">
                   <CameraOff className="w-8 h-8" />
                 </div>
@@ -310,7 +310,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
                 </div>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="min-h-[48px] px-6 rounded-2xl bg-white text-[#0c1324] font-display font-bold text-sm flex items-center gap-2 hover:bg-white/90 active:scale-95 transition-all shadow-xl"
+                  className="min-h-[48px] px-6 rounded-2xl bg-white text-[#0B0F19] font-display font-bold text-sm flex items-center gap-2 hover:bg-white/90 active:scale-95 transition-all shadow-xl"
                 >
                   <ImageIcon className="w-4 h-4" />
                   <span>{t.scanner.uploadFromLibrary}</span>
@@ -332,7 +332,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
             </div>
 
             {/* Floating Glass Progress Card */}
-            <div className="mt-6 w-[86%] max-w-[340px] glass-card rounded-3xl p-5 border border-emerald-500/30 bg-[#0c1324]/90 backdrop-blur-2xl shadow-2xl flex flex-col gap-3">
+            <div className="mt-6 w-[86%] max-w-[340px] glass-card rounded-3xl p-5 border border-emerald-500/30 bg-[#0B0F19]/90 backdrop-blur-2xl shadow-2xl flex flex-col gap-3">
               <div className="flex justify-between items-center text-xs font-mono">
                 <span className="text-white font-bold">{progressInfo.status}</span>
                 <span className="text-emerald-400 font-bold tabular-nums">{progressInfo.progress}%</span>
@@ -419,7 +419,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
 
       {/* STATE 3 CONTROLS: Actionable Result Sheet (Slide-Up Modal) */}
       {imagePreviewUrl && !isProcessing && parsedData && (
-        <div className="relative z-30 animate-slide-up bg-[#0c1324]/95 backdrop-blur-2xl border-t border-white/15 rounded-t-3xl p-5 sm:p-6 shadow-[0_-12px_36px_rgba(0,0,0,0.7)] max-w-lg mx-auto w-full flex flex-col gap-4 pb-safe">
+        <div className="relative z-30 animate-slide-up bg-[#0B0F19]/95 backdrop-blur-2xl border-t border-white/15 rounded-t-3xl p-5 sm:p-6 shadow-[0_-12px_36px_rgba(0,0,0,0.7)] max-w-lg mx-auto w-full flex flex-col gap-4 pb-safe">
           
           {/* Header: Venue & Verified Status */}
           <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
@@ -498,7 +498,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
             <button
               id="btn-scanner-send-calc"
               onClick={handleSendToCalculator}
-              className="flex-1 min-h-[56px] h-14 rounded-2xl bg-white text-[#0c1324] font-display font-black text-sm flex items-center justify-center gap-2.5 hover:bg-white/90 active:scale-[0.97] transition-all shadow-xl cursor-pointer"
+              className="flex-1 min-h-[56px] h-14 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] font-display font-black text-sm flex items-center justify-center gap-2.5 hover:brightness-105 active:scale-[0.97] transition-all shadow-[0_0_24px_rgba(251,191,36,0.3)] cursor-pointer"
             >
               <Check className="w-5 h-5 stroke-[2.5]" />
               <span>{t.scanner.applyToCalc}</span>

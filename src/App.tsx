@@ -179,7 +179,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0c1324] text-[#dce1fb] flex flex-col justify-between selection:bg-white/20 selection:text-white">
+    <div className="min-h-screen bg-[#0B0F19] text-[#dce1fb] flex flex-col justify-between selection:bg-white/20 selection:text-white">
       {/* Top Header Bar with Minimalist Titanium Glassmorphism */}
       <TopAppBar
         currentScreen={currentScreen}
@@ -191,7 +191,7 @@ export const App: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 w-full max-w-2xl mx-auto px-4 pt-20 pb-24 sm:px-6">
+      <main className="flex-1 w-full max-w-2xl mx-auto px-4 pt-20 pb-36 sm:px-6">
         {currentScreen === 'calculator' && (
           <MainCalculator
             selectedCurrency={selectedCurrency}

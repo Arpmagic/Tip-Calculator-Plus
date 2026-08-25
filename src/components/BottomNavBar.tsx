@@ -54,9 +54,9 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
   return (
     <nav 
       aria-label="Bottom Navigation"
-      className="fixed bottom-0 inset-x-0 z-40 pb-safe pointer-events-none flex justify-center px-4 mb-2"
+      className="fixed bottom-0 inset-x-0 z-50 pb-safe pointer-events-none flex justify-center px-4 mb-2"
     >
-      <div className="flex justify-around items-center h-16 px-2 sm:px-4 bg-[#0c1324]/90 backdrop-blur-2xl border border-white/[0.12] rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] pointer-events-auto max-w-md w-full">
+      <div className="flex justify-around items-center h-16 px-2 sm:px-4 bg-[#0B0F19]/90 backdrop-blur-2xl border border-white/[0.12] rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] pointer-events-auto max-w-md w-full">
         {navItems.map((item) => {
           const isActive = currentScreen === item.id;
           return (
@@ -79,7 +79,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
               <div className="relative flex items-center justify-center">
                 {item.icon}
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2.5 min-w-[17px] h-[17px] px-1 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-[#0c1324] text-[9px] font-mono font-black flex items-center justify-center border border-[#0c1324] shadow-[0_0_10px_rgba(251,191,36,0.5)]">
+                  <span className="absolute -top-1.5 -right-2.5 min-w-[17px] h-[17px] px-1 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 text-[#0B0F19] text-[9px] font-mono font-black flex items-center justify-center border border-[#0B0F19] shadow-[0_0_10px_rgba(251,191,36,0.5)]">
                     {item.badge}
                   </span>
                 )}
