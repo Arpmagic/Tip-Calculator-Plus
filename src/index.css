@@ -5,10 +5,10 @@
   --font-body: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --color-surface: #05070E;
-  --color-surface-dim: #05070E;
+  --color-surface: #060810;
+  --color-surface-dim: #060810;
   --color-surface-bright: #1E2333;
-  --color-surface-container-lowest: #03050A;
+  --color-surface-container-lowest: #030408;
   --color-surface-container-low: #0B0F19;
   --color-surface-container: #101522;
   --color-surface-container-high: #161B29;
@@ -29,7 +29,7 @@
 
 body {
   font-family: var(--font-body);
-  background-color: #05070E;
+  background-color: #060810;
   color: #dce1fb;
   background-image: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 60%),
     url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
@@ -38,18 +38,18 @@ body {
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
 
 .glass-card {
-  background: #0B0F19;
+  background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.45);
 }
 
@@ -70,17 +70,17 @@ body {
   transform: scale(0.98);
 }
 
-/* 2026 Solid Champagne Gold CTA */
+/* 2026 Ultra-Refined Champagne Gold CTA */
 .btn-gold {
-  background-color: #F0C05A;
-  color: #05070E;
-  font-weight: 700;
-  box-shadow: 0 4px 24px rgba(240, 192, 90, 0.18);
+  background-color: #F3C350;
+  color: #060810;
+  font-weight: 600;
+  box-shadow: 0 4px 24px rgba(243, 195, 80, 0.2);
   transition: all 0.15s ease-in-out;
 }
 
 .btn-gold:hover {
-  background-color: #E2B248;
+  background-color: #E2B240;
 }
 
 .btn-gold:active {

@@ -222,12 +222,12 @@ export const MainCalculator: React.FC<MainCalculatorProps> = ({
         
         <div className="flex items-baseline justify-between z-10">
           <div className="flex flex-col">
-            <span className="font-mono text-xs text-[#c4c7c8] uppercase tracking-wider font-semibold">
+            <span className="font-mono text-xs text-[#c4c7c8] uppercase tracking-wider font-medium">
               {splitCount > 1 
                 ? `${t.calculator.totalPerPerson} (${splitCount} ${t.calculator.people})` 
                 : t.calculator.finalGrandTotal}
             </span>
-            <div className="font-display font-black text-4xl sm:text-5xl text-white tracking-tight leading-none mt-2 tabular-nums">
+            <div className="font-display font-semibold text-5xl text-white tracking-tight leading-none mt-2 tabular-nums">
               {splitCount > 1 ? formattedPerPerson : formattedGrandTotal}
             </div>
           </div>
@@ -563,10 +563,10 @@ export const MainCalculator: React.FC<MainCalculatorProps> = ({
           <button
             id="btn-save-calculation"
             onClick={handleSaveCalculation}
-            className={`flex-1 min-h-[56px] h-14 rounded-xl font-display font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer shadow-lg ${
+            className={`flex-1 min-h-[56px] h-14 rounded-2xl font-display font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer shadow-lg ${
               savedSuccess
-                ? 'bg-emerald-500 text-[#05070E] shadow-[0_0_24px_rgba(16,185,129,0.4)]'
-                : 'bg-[#F0C05A] hover:bg-[#E2B248] text-[#05070E] shadow-[0_4px_24px_rgba(240,192,90,0.18)]'
+                ? 'bg-emerald-500 text-[#060810] shadow-[0_0_24px_rgba(16,185,129,0.4)]'
+                : 'bg-[#F3C350] hover:bg-[#E2B240] text-[#060810] shadow-[0_4px_24px_rgba(243,195,80,0.2)]'
             }`}
           >
             {savedSuccess ? (

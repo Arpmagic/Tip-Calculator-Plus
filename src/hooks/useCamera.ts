@@ -81,20 +81,23 @@ export function useCamera({
     stopCamera();
 
     const constraintConfigs: MediaStreamConstraints[] = [
-      // 1. Primary: Ideal high-res back camera
+      // 1. Primary: Ultra crisp high-res back camera with continuous autofocus
       {
         audio: false,
         video: {
           facingMode: { ideal: idealFacingMode },
-          width: { ideal: idealWidth },
-          height: { ideal: idealHeight },
-        },
+          width: { ideal: 1920, min: 1280 },
+          height: { ideal: 1080, min: 720 },
+          focusMode: { ideal: 'continuous' } as any,
+        } as MediaTrackConstraints,
       },
-      // 2. Fallback: Exact environment facing mode
+      // 2. Fallback: Exact environment facing mode with high-res
       {
         audio: false,
         video: {
           facingMode: idealFacingMode,
+          width: { ideal: 1920, min: 1280 },
+          height: { ideal: 1080, min: 720 },
         },
       },
       // 3. Ultimate Fallback: Any available video device
@@ -185,7 +188,7 @@ export function useCamera({
     }
   }, [isTorchOn]);
 
-  // Capture current video frame to high-res Blob & DataURL
+  // Capture current video frame to high-res Blob & DataURL using native sensor resolution
   const captureSnapshot = useCallback(async (): Promise<{
     blob: Blob;
     dataUrl: string;
@@ -195,8 +198,10 @@ export function useCamera({
     const video = videoRef.current;
     if (!video) return null;
 
-    const width = video.videoWidth || video.clientWidth || 1280;
-    const height = video.videoHeight || video.clientHeight || 720;
+    const track = videoTrackRef.current || streamRef.current?.getVideoTracks()[0];
+    const settings = track?.getSettings();
+    const width = video.videoWidth || settings?.width || 1920;
+    const height = video.videoHeight || settings?.height || 1080;
 
     if (width <= 0 || height <= 0) return null;
 

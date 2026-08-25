@@ -5,12 +5,14 @@ const config: CapacitorConfig = {
   appName: 'Tip Calculator Plus+',
   webDir: 'dist',
   server: {
+    url: 'https://tip-calculator-plus.vercel.app',
+    cleartext: true,
     androidScheme: 'https',
   },
   plugins: {
     SplashScreen: {
       launchAutoHide: true,
-      backgroundColor: '#0B0F19',
+      backgroundColor: '#060810',
     },
   },
 };

@@ -15,7 +15,7 @@ export const CURRENT_BUILD_VERSION = 'v2.5.0';
 export const CURRENT_BUILD_TIMESTAMP = 1787640000000; // 2026-08-25
 export const CURRENT_COMMIT_HASH = '4cf8db4';
 
-const LAST_CHECKED_KEY = 'tip_calc_last_version_check';
+const REMOTE_VERSION_URL = 'https://tip-calculator-plus.vercel.app/version.json';
 const DISMISSED_VERSION_KEY = 'tip_calc_dismissed_version';
 
 /**
@@ -43,28 +43,40 @@ export async function checkForAppUpdates(): Promise<{
     }
 
     // 2. Fetch remote manifest with cache-busting timestamp
-    const response = await fetch(`/version.json?_t=${Date.now()}`, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache',
-      },
-    });
+    const endpoints = [
+      `${REMOTE_VERSION_URL}?_t=${Date.now()}`,
+      `/version.json?_t=${Date.now()}`,
+    ];
 
-    if (response.ok) {
-      const remote = await response.json();
-      if (remote && remote.buildTime && remote.buildTime > CURRENT_BUILD_TIMESTAMP) {
-        const dismissed = localStorage.getItem(DISMISSED_VERSION_KEY);
-        if (dismissed !== remote.version) {
-          return {
-            updateAvailable: true,
-            latestVersion: remote.version || 'v2.5.1',
-            notes: remote.notes || 'Latest performance & OCR upgrades available.',
-          };
+    for (const url of endpoints) {
+      try {
+        const response = await fetch(url, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+          },
+        });
+
+        if (response.ok) {
+          const remote = await response.json();
+          if (remote && remote.buildTime && remote.buildTime > CURRENT_BUILD_TIMESTAMP) {
+            const dismissed = localStorage.getItem(DISMISSED_VERSION_KEY);
+            if (dismissed !== remote.version) {
+              return {
+                updateAvailable: true,
+                latestVersion: remote.version || 'v2.5.1',
+                notes: remote.notes || 'Latest performance & OCR upgrades available.',
+              };
+            }
+          }
+          // If we got a valid response and no update was found, return current
+          break;
         }
+      } catch {
+        // Try next endpoint
       }
     }
   } catch (err) {
-    // Fallback: offline or non-hosted environment
     console.debug('Version check completed offline:', err);
   }
 

@@ -17,10 +17,12 @@ import {
   Wallet,
   TrendingUp,
   Receipt,
-  ArrowUpRight
+  ArrowUpRight,
+  DownloadCloud
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { formatCurrency, formatMonthYear, formatDate, parseLocalizedNumber } from '../utils/i18nFormatter';
+import { checkForAppUpdates, applyInstantUpdate, CURRENT_BUILD_VERSION } from '../utils/versionCheck';
 
 interface UserProfileProps {
   user: UserProfileType;
@@ -54,8 +56,31 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   const [newTaskTitle, setNewTaskTitle] = useState<string>('');
   const [newTaskCategory, setNewTaskCategory] = useState<'split' | 'verify' | 'refund' | 'expense' | 'travel'>('split');
   const [newTaskAmount, setNewTaskAmount] = useState<string>('');
-  const [showAddTaskModal, setShowAddTaskModal] = useState<boolean>(false);
   const [taskFilter, setTaskFilter] = useState<'all' | 'pending' | 'completed'>('all');
+  const [updateStatus, setUpdateStatus] = useState<string | null>(null);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState<boolean>(false);
+
+  const handleCheckUpdates = async () => {
+    setIsCheckingUpdate(true);
+    setUpdateStatus('Checking for updates...');
+    try {
+      const res = await checkForAppUpdates();
+      if (res.updateAvailable) {
+        setUpdateStatus(`Updating to ${res.latestVersion}...`);
+        setTimeout(() => {
+          applyInstantUpdate();
+        }, 800);
+      } else {
+        setUpdateStatus(`App is up to date (${CURRENT_BUILD_VERSION})`);
+        setTimeout(() => setUpdateStatus(null), 3000);
+      }
+    } catch {
+      setUpdateStatus(`App is up to date (${CURRENT_BUILD_VERSION})`);
+      setTimeout(() => setUpdateStatus(null), 3000);
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  };
 
   // Compute live financial analytics
   const totalBillsCount = history.length;
@@ -350,6 +375,32 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 </div>
               </div>
             </div>
+          </section>
+
+          {/* 4. LIVE OVER-THE-AIR (OTA) AUTO-UPDATES CARD */}
+          <section className="glass-panel rounded-3xl p-5 border border-white/[0.08] bg-white/[0.03] space-y-3">
+            <div className="flex justify-between items-center">
+              <div>
+                <span className="text-xs font-mono text-white font-bold block">Live Over-The-Air Updates</span>
+                <span className="text-[10px] font-mono text-[#c4c7c8]/80 block mt-0.5">Installed Build: {CURRENT_BUILD_VERSION}</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleCheckUpdates}
+                disabled={isCheckingUpdate}
+                className="min-h-[44px] px-4 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-white/15 text-xs font-mono font-bold text-white flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isCheckingUpdate ? 'animate-spin text-[#F3C350]' : 'text-emerald-400'}`} />
+                <span>{isCheckingUpdate ? 'Checking...' : 'Check for Updates'}</span>
+              </button>
+            </div>
+
+            {updateStatus && (
+              <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-xs font-mono text-white flex items-center gap-2 animate-fade-in">
+                <DownloadCloud className="w-4 h-4 text-[#F3C350] shrink-0" />
+                <span className="font-semibold">{updateStatus}</span>
+              </div>
+            )}
           </section>
 
         </div>

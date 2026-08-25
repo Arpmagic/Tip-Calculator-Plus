@@ -679,14 +679,14 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
             <button
               type="button"
               onClick={() => setShowRawOcr(!showRawOcr)}
-              className="text-[10px] font-mono text-white/40 hover:text-white/70 flex items-center gap-1.5 transition-colors cursor-pointer py-1"
+              className="text-[10px] font-mono text-white/50 hover:text-white/80 flex items-center gap-1.5 transition-colors cursor-pointer py-1"
             >
               {showRawOcr ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              <span>{showRawOcr ? 'Hide Raw OCR Text' : '👁 Show Raw OCR Text'}</span>
+              <span>{showRawOcr ? '✕ Hide Raw Extracted Text' : '👁 Show Raw Extracted Text'}</span>
             </button>
 
             {showRawOcr && (
-              <div className="mt-1.5 p-3 rounded-xl bg-black/70 border border-white/[0.08] text-[10px] font-mono text-white/80 max-h-28 overflow-y-auto whitespace-pre-wrap select-text leading-relaxed">
+              <div className="mt-1.5 p-3 rounded-2xl bg-black/80 border border-white/[0.1] text-[10px] font-mono text-white/90 max-h-32 overflow-y-auto whitespace-pre-wrap select-text leading-relaxed">
                 {parsedData.rawText || '(No OCR text returned)'}
               </div>
             )}
@@ -699,7 +699,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
               id="btn-scanner-confirm-save"
               type="button"
               onClick={handleConfirmAndSave}
-              className="w-full min-h-[56px] h-14 rounded-xl bg-[#F0C05A] hover:bg-[#E2B248] text-[#05070E] font-display font-bold text-sm tracking-tight flex items-center justify-center gap-2 shadow-[0_4px_24px_rgba(240,192,90,0.18)] active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full min-h-[56px] h-14 rounded-2xl bg-[#F3C350] hover:bg-[#E2B240] text-[#060810] font-display font-bold text-sm tracking-tight flex items-center justify-center gap-2 shadow-[0_4px_24px_rgba(243,195,80,0.2)] active:scale-[0.98] transition-all cursor-pointer"
             >
               <Check className="w-5 h-5 stroke-[2.5]" />
               <span>Confirm & Save</span>
@@ -713,7 +713,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
                 onClick={handleSendToCalculator}
                 className="flex-1 min-h-[48px] h-12 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-white font-display font-semibold text-xs flex items-center justify-center gap-2 active:scale-[0.98] transition-all border border-white/[0.1] cursor-pointer shadow-sm"
               >
-                <Layers className="w-4 h-4 text-[#F0C05A]" />
+                <Layers className="w-4 h-4 text-[#F3C350]" />
                 <span>Send to Calculator</span>
               </button>
 

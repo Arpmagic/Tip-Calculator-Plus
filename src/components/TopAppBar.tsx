@@ -26,7 +26,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
   const { t } = useLanguage();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-[#0B0F19]/85 backdrop-blur-2xl border-b border-white/[0.08] shadow-sm transition-all pt-safe">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-[#060810]/85 backdrop-blur-2xl border-b border-white/[0.08] shadow-sm transition-all pt-safe">
       <div className="flex items-center justify-between px-4 sm:px-6 h-16 max-w-2xl mx-auto w-full">
         {/* Left: App Title & Brand Identity */}
         <button
@@ -34,15 +34,15 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
           className="flex items-center gap-2.5 text-left group cursor-pointer active:scale-95 transition-transform min-h-[48px]"
           aria-label="Home calculator"
         >
-          <div className="w-9 h-9 rounded-2xl bg-white/[0.08] border border-white/[0.16] flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
-            <CreditCard className="w-4.5 h-4.5 text-white" />
+          <div className="w-9 h-9 rounded-2xl bg-white/[0.06] border border-white/[0.12] flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+            <CreditCard className="w-4.5 h-4.5 text-[#F3C350]" />
           </div>
           <div className="flex items-center gap-2">
-            <h1 className="font-display font-black text-base sm:text-lg tracking-tight text-white">
+            <h1 className="font-display font-bold text-base sm:text-lg tracking-tight text-white">
               Tip Calculator Plus+
             </h1>
             {user.isPro && (
-              <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400/20 to-yellow-400/20 border border-amber-400/50 text-amber-300 text-[10px] font-mono font-black uppercase tracking-wider shadow-[0_0_12px_rgba(251,191,36,0.25)]">
+              <span className="px-2 py-0.5 rounded-full bg-[#F3C350]/20 border border-[#F3C350]/50 text-[#F3C350] text-[10px] font-mono font-bold uppercase tracking-wider">
                 PRO
               </span>
             )}
@@ -55,10 +55,10 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
             <button
               id="top-upgrade-pro-btn"
               onClick={onOpenPaywall}
-              className="flex items-center gap-1.5 min-h-[44px] px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] text-xs font-display font-extrabold transition-all active:scale-95 shadow-[0_0_20px_rgba(251,191,36,0.35)] hover:brightness-105 cursor-pointer"
+              className="flex items-center gap-1.5 min-h-[44px] px-3.5 py-1.5 rounded-full bg-[#F3C350] hover:bg-[#E2B240] text-[#060810] text-xs font-display font-bold transition-all active:scale-95 shadow-[0_2px_14px_rgba(243,195,80,0.25)] cursor-pointer"
               aria-label="Upgrade to Pro"
             >
-              <Crown className="w-3.5 h-3.5 fill-[#0B0F19]" />
+              <Crown className="w-3.5 h-3.5 fill-[#060810]" />
               <span>PRO</span>
             </button>
           )}

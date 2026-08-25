@@ -9,9 +9,12 @@ import {
   Sliders, 
   Globe, 
   Lock,
-  AlertTriangle
+  AlertTriangle,
+  RefreshCw,
+  DownloadCloud
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
+import { checkForAppUpdates, applyInstantUpdate, CURRENT_BUILD_VERSION } from '../utils/versionCheck';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -41,8 +44,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [preTaxTipping, setPreTaxTipping] = useState<boolean>(user.preTaxTipping ?? true);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(user.soundEnabled ?? true);
   const [hapticEnabled, setHapticEnabled] = useState<boolean>(user.hapticEnabled ?? true);
-  const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+  const [updateStatus, setUpdateStatus] = useState<string | null>(null);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState<boolean>(false);
+
+  const handleCheckUpdates = async () => {
+    setIsCheckingUpdate(true);
+    setUpdateStatus('Checking for updates...');
+    try {
+      const res = await checkForAppUpdates();
+      if (res.updateAvailable) {
+        setUpdateStatus(`Updating to ${res.latestVersion}...`);
+        setTimeout(() => {
+          applyInstantUpdate();
+        }, 800);
+      } else {
+        setUpdateStatus(`App is up to date (${CURRENT_BUILD_VERSION})`);
+        setTimeout(() => setUpdateStatus(null), 3000);
+      }
+    } catch {
+      setUpdateStatus(`App is up to date (${CURRENT_BUILD_VERSION})`);
+      setTimeout(() => setUpdateStatus(null), 3000);
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -298,6 +323,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
+          {/* Live OTA Updates Section */}
+          <div className="glass-panel rounded-2xl p-3.5 border border-white/10 space-y-2 mt-3">
+            <div className="flex justify-between items-center">
+              <div>
+                <span className="text-xs font-mono text-white font-bold block">Live Over-The-Air Updates</span>
+                <span className="text-[10px] font-mono text-[#c4c7c8]/80 block mt-0.5">Current Build: {CURRENT_BUILD_VERSION}</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleCheckUpdates}
+                disabled={isCheckingUpdate}
+                className="min-h-[40px] px-3.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-white/15 text-xs font-mono font-bold text-white flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isCheckingUpdate ? 'animate-spin text-[#F3C350]' : 'text-emerald-400'}`} />
+                <span>{isCheckingUpdate ? 'Checking...' : 'Check for Updates'}</span>
+              </button>
+            </div>
+
+            {updateStatus && (
+              <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-mono text-white flex items-center gap-2 animate-fade-in">
+                <DownloadCloud className="w-3.5 h-3.5 text-[#F3C350] shrink-0" />
+                <span className="font-semibold">{updateStatus}</span>
+              </div>
+            )}
+          </div>
+
           {/* Danger Zone: Account & Data Deletion */}
           <div className="glass-panel rounded-2xl p-4 border border-rose-500/20 bg-rose-500/5 space-y-3 mt-4">
             <div>
@@ -309,7 +360,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <button
               type="button"
               onClick={() => setShowDeleteConfirm(true)}
-              className="w-full min-h-[48px] rounded-xl border border-rose-500/30 text-rose-400 font-display font-bold text-xs flex items-center justify-center gap-2 hover:bg-rose-500/10 active:scale-95 transition-all"
+              className="w-full min-h-[48px] rounded-xl border border-rose-500/30 text-rose-400 font-display font-bold text-xs flex items-center justify-center gap-2 hover:bg-rose-500/10 active:scale-95 transition-all cursor-pointer"
             >
               <Trash2 className="w-4 h-4" />
               <span>Delete Account & Data</span>
