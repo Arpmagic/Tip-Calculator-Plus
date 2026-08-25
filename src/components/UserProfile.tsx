@@ -246,9 +246,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 <button
                   id="profile-upgrade-btn"
                   onClick={onOpenPaywall}
-                  className="flex-1 min-h-[48px] py-3 px-5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] font-display font-extrabold text-sm flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(251,191,36,0.35)] hover:brightness-105 active:scale-[0.97] transition-all duration-150 cursor-pointer"
+                  className="flex-1 min-h-[48px] py-3 px-5 rounded-xl bg-[#F0C05A] hover:bg-[#E2B248] text-[#05070E] font-display font-bold text-sm flex items-center justify-center gap-2 shadow-[0_4px_24px_rgba(240,192,90,0.18)] active:scale-[0.98] transition-all cursor-pointer"
                 >
-                  <Sparkles className="w-4 h-4 fill-[#0B0F19]" />
+                  <Sparkles className="w-4 h-4 fill-[#05070E]" />
                   <span>{t.profile.upgradeToPro}</span>
                 </button>
               ) : (

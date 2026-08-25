@@ -6,12 +6,13 @@
  */
 
 export interface PreprocessOptions {
-  contrast?: number; // -100 to 100, default +65
-  brightness?: number; // -100 to 100, default +8
+  contrast?: number; // -100 to 100, default +75
+  brightness?: number; // -100 to 100, default +10
   sharpen?: boolean; // Apply unsharp masking for blurry characters
-  binarize?: boolean; // Adaptive Otsu thresholding for faded thermal receipts
+  binarize?: boolean; // Adaptive Otsu thresholding (defaults to true for crisp OCR)
   threshold?: number; // 0 to 255 (if omitted, Otsu computes optimal threshold)
   maxWidth?: number; // Max resolution clamp for performance (e.g. 1800px)
+  autoRotate?: boolean; // Auto-rotate landscape photos of tall receipts
 }
 
 /**
@@ -61,19 +62,30 @@ export function computeOtsuThreshold(grayscaleData: Uint8ClampedArray | number[]
 
 /**
  * Loads an image from a File, Blob, Data URL, or Image element onto an HTML5 Canvas.
+ * Handles EXIF/device landscape rotation if receipt was captured sideways.
  */
 export async function loadImageToCanvas(
-  source: File | Blob | string | HTMLImageElement
+  source: File | Blob | string | HTMLImageElement,
+  autoRotate: boolean = true
 ): Promise<HTMLCanvasElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
 
     img.onload = () => {
-      const canvas = document.createElement('canvas');
       const maxDim = 1800;
       let width = img.naturalWidth || img.width;
       let height = img.naturalHeight || img.height;
+
+      // Handle orientation: if user snapped a portrait receipt in landscape (width > 1.35 * height)
+      const needsPortraitRotation = autoRotate && width > height * 1.35;
+
+      if (needsPortraitRotation) {
+        // Swap dimensions for 90deg clockwise rotation
+        const temp = width;
+        width = height;
+        height = temp;
+      }
 
       if (width > maxDim || height > maxDim) {
         if (width > height) {
@@ -85,6 +97,7 @@ export async function loadImageToCanvas(
         }
       }
 
+      const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;
 
@@ -94,7 +107,16 @@ export async function loadImageToCanvas(
         return;
       }
 
-      ctx.drawImage(img, 0, 0, width, height);
+      if (needsPortraitRotation) {
+        ctx.save();
+        ctx.translate(width / 2, height / 2);
+        ctx.rotate((90 * Math.PI) / 180);
+        ctx.drawImage(img, -height / 2, -width / 2, height, width);
+        ctx.restore();
+      } else {
+        ctx.drawImage(img, 0, 0, width, height);
+      }
+
       resolve(canvas);
     };
 
@@ -120,9 +142,9 @@ export function preprocessCanvas(
   canvas: HTMLCanvasElement,
   options: PreprocessOptions = {}
 ): HTMLCanvasElement {
-  const contrast = options.contrast ?? 65;
-  const brightness = options.brightness ?? 8;
-  const binarize = options.binarize ?? false;
+  const contrast = options.contrast ?? 75;
+  const brightness = options.brightness ?? 10;
+  const binarize = options.binarize ?? true; // Enforce binarization by default for crisp OCR
 
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) return canvas;
@@ -157,7 +179,7 @@ export function preprocessCanvas(
     data[i + 2] = gray;
   }
 
-  // 4. Optional adaptive Otsu threshold binarization
+  // 4. Adaptive Otsu threshold binarization for clean high-contrast black/white characters
   if (binarize) {
     const otsuThreshold = options.threshold ?? computeOtsuThreshold(data);
     for (let i = 0; i < data.length; i += 4) {
@@ -208,7 +230,7 @@ export async function preprocessReceiptImage(
   source: File | Blob | string | HTMLImageElement,
   options?: PreprocessOptions
 ): Promise<{ canvas: HTMLCanvasElement; dataUrl: string }> {
-  const canvas = await loadImageToCanvas(source);
+  const canvas = await loadImageToCanvas(source, options?.autoRotate ?? false);
   preprocessCanvas(canvas, options);
   const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
   return { canvas, dataUrl };

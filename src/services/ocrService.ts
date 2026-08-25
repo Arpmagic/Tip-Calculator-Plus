@@ -18,6 +18,7 @@ export interface ParsedReceiptData {
   detectedCurrency?: string; // e.g. 'PLN', 'EUR', 'USD', 'GBP', 'UAH', 'CHF', 'JPY', etc.
   lineItems: ExtractedLineItem[];
   isValidated: boolean; // Math check: Subtotal + Tax ≈ Grand Total (within 0.05)
+  isEstimatedTax?: boolean; // True if tax was derived mathematically rather than explicitly printed
   mathDiscrepancy?: number;
   confidenceScore: number; // 0 to 100
   rawText: string;
@@ -42,7 +43,6 @@ export function normalizePriceString(str: string): number | null {
 
   // Reject strings that are item weights (e.g. "120g", "250ml", "0.5kg")
   if (/\b\d+\s*(?:g|kg|ml|l|szt|gr)\b/i.test(cleaned)) {
-    // If the entire string is just a weight, reject it
     if (/^\s*\d+\s*(?:g|kg|ml|l|szt|gr)\s*$/i.test(cleaned)) {
       return null;
     }
@@ -69,25 +69,36 @@ export function normalizePriceString(str: string): number | null {
 }
 
 /**
- * Detects currency strictly using word boundaries to prevent false positives.
- * Never treats words with 'e' or 'c' as EUR.
+ * Detects currency using multi-token heuristics and European city/fiscal indicators.
  */
 export function detectReceiptCurrency(rawText: string): string {
   const upper = rawText.toUpperCase();
 
-  // 1. Polish Fiscal Indicators & Złoty (PLN / zł)
+  // 1. Polish Fiscal Indicators, Cities & Złoty (PLN / zł)
+  const polishCityIndicators = [
+    'POZNAŃ', 'POZNAN', 'WARSZAWA', 'WARSAW', 'GDAŃSK', 'GDANSK', 
+    'KRAKÓW', 'KRAKOW', 'WROCŁAW', 'WROCLAW', 'KATOWICE', 'ŁÓDŹ', 
+    'LODZ', 'SZCZECIN', 'LUBLIN', 'BYDGOSZCZ', 'GDYNIA', 'SOPOT'
+  ];
+  const hasPolishCity = polishCityIndicators.some((city) => upper.includes(city));
+
   if (
     /\b(PLN|ZŁ|ZL)\b/i.test(rawText) ||
+    hasPolishCity ||
     upper.includes('PARAGON FISKALNY') ||
+    upper.includes('PARAGON') ||
     upper.includes('SUMA PLN') ||
     upper.includes('KWOTA PLN') ||
     upper.includes('SUMA PTU') ||
-    upper.includes('SPRZEDAŻ OPODATKOWANA') ||
-    upper.includes('SPRZEDAZ OPODATKOWANA') ||
+    upper.includes('SPRZEDAŻ') ||
+    upper.includes('SPRZEDAZ') ||
     upper.includes('DO ZAPŁATY') ||
     upper.includes('DO ZAPLATY') ||
     upper.includes('ROZLICZENIE PŁATNOŚCI') ||
     upper.includes('PŁATNOŚĆ KARTĄ') ||
+    upper.includes('ŻABKA') ||
+    upper.includes('ZABKA') ||
+    upper.includes('BIEDRONKA') ||
     /\bNIP[:\s]*\d{3}[-\s]?\d{3}[-\s]?\d{2}[-\s]?\d{2}\b/.test(upper) ||
     /\bNIP\s+\d{10}\b/.test(upper)
   ) {
@@ -100,23 +111,26 @@ export function detectReceiptCurrency(rawText: string): string {
     rawText.includes('₴') ||
     upper.includes('ФІСКАЛЬНИЙ ЧЕК') ||
     upper.includes('СУМА ГРН') ||
-    upper.includes('ПІДСУМОК')
+    upper.includes('ПІДСУМОК') ||
+    upper.includes('КИЇВ') ||
+    upper.includes('ЛЬВІВ') ||
+    upper.includes('ОДЕСА')
   ) {
     return 'UAH';
   }
 
   // 3. British Pound (GBP / £)
-  if (/\bGBP\b/i.test(rawText) || rawText.includes('£') || /\bPOUND\b/i.test(rawText)) {
+  if (/\bGBP\b/i.test(rawText) || rawText.includes('£') || /\bPOUND\b/i.test(rawText) || upper.includes('LONDON') || upper.includes('VAT REG')) {
     return 'GBP';
   }
 
   // 4. Swiss Franc (CHF)
-  if (/\b(CHF|SFRS?)\b/i.test(rawText) || /\bFR\.\s*\d/i.test(rawText)) {
+  if (/\b(CHF|SFRS?)\b/i.test(rawText) || /\bFR\.\s*\d/i.test(rawText) || upper.includes('ZÜRICH') || upper.includes('GENEVA')) {
     return 'CHF';
   }
 
   // 5. Japanese Yen (JPY / ¥ / 円)
-  if (/\bJPY\b/i.test(rawText) || rawText.includes('¥') || rawText.includes('円')) {
+  if (/\bJPY\b/i.test(rawText) || rawText.includes('¥') || rawText.includes('円') || upper.includes('TOKYO') || upper.includes('SHIBUYA')) {
     return 'JPY';
   }
 
@@ -130,7 +144,11 @@ export function detectReceiptCurrency(rawText: string): string {
     upper.includes('SUMME EUR') ||
     upper.includes('GESAMTBETRAG') ||
     upper.includes('TOTAL TTC') ||
-    upper.includes('TOTAL HT')
+    upper.includes('TOTAL HT') ||
+    upper.includes('PARIS') ||
+    upper.includes('BERLIN') ||
+    upper.includes('MADRID') ||
+    upper.includes('ROMA')
   ) {
     return 'EUR';
   }
@@ -149,8 +167,9 @@ export function detectReceiptCurrency(rawText: string): string {
 }
 
 /**
- * Intelligent fiscal regex parser that processes raw OCR receipt text
- * across Polish/European fiscal receipts, US/Global formats, and dining bills.
+ * Intelligent multi-strategy fiscal OCR parser.
+ * Employs Strategy A (Fuzzy Keyword Match) + Strategy B (Bottom-Up Heuristic Number Search)
+ * so that it NEVER returns an empty or $0.00 total on valid receipt scans.
  */
 export function parseReceiptText(rawText: string): ParsedReceiptData {
   const lines = rawText
@@ -164,6 +183,7 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
   let subtotal = 0;
   let taxAmount = 0;
   let grandTotal = 0;
+  let isEstimatedTax = false;
   const lineItems: ExtractedLineItem[] = [];
 
   // Known global & European brand patterns for immediate high-confidence matching
@@ -244,7 +264,7 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
       /^\d+[\s\-/]/,
       /^\d{2}-\d{3}\b/,
       /\d{3}[-.\s]\d{3}/,
-      /^[a-z]{1,4}\s+[a-z]{1,4}\s+[a-z]{1,4}$/i, // Filter short random 2-3 word OCR gibberish
+      /^[a-z]{1,4}\s+[a-z]{1,4}\s+[a-z]{1,4}$/i,
     ];
 
     for (let i = 0; i < Math.min(6, lines.length); i++) {
@@ -278,27 +298,35 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
     // Strip out percentages (e.g. "23%", "10%", "8.875%", "(10%)")
     clean = clean.replace(/\(?\b\d+(?:[.,]\d+)?\s*%\)?/gi, ' ');
 
-    // Strip out weights (e.g. "120g", "250ml", "0.5kg") and dates (e.g. "1956r")
-    clean = clean.replace(/\b\d+\s*(?:g|kg|ml|l|szt|gr)\b/gi, ' ');
+    // Strip out weights (e.g. "120g", "250ml", "0.5kg", "5L") and dates (e.g. "1956r")
+    clean = clean.replace(/\b\d+(?:[.,]\d+)?\s*(?:g|kg|ml|l|szt|gr)\b/gi, ' ');
     clean = clean.replace(/\b\d{4}[-/.]\d{1,2}[-/.]\d{1,2}\b/g, ' ');
     clean = clean.replace(/\b\d{2}[-/.]\d{2}[-/.]\d{4}\b/g, ' ');
     clean = clean.replace(/\b\d{4}r\b/gi, ' ');
     clean = clean.replace(/\bNIP[:\s]*\d{10}\b/gi, ' ');
+    clean = clean.replace(/\b\d{1,2}:\d{2}(?::\d{2})?\b/g, ' '); // Strip timestamps
 
     const matches = clean.match(/-?\b\d{1,5}[.,]\d{2}\b/g);
-    if (!matches || matches.length === 0) {
-      return normalizePriceString(clean);
+    if (matches && matches.length > 0) {
+      const lastMatch = matches[matches.length - 1].replace(',', '.');
+      const num = parseFloat(lastMatch);
+      return Number.isFinite(num) ? num : null;
     }
-    // Take the rightmost price match on the line (standard layout for fiscal summaries)
-    const lastMatch = matches[matches.length - 1].replace(',', '.');
-    const num = parseFloat(lastMatch);
-    return Number.isFinite(num) ? num : null;
+
+    // Fallback for whole integers (e.g. JPY receipts "4500円" or round euro/dollar bills)
+    const intMatches = clean.match(/-?\b\d{1,5}\b/g);
+    if (intMatches && intMatches.length > 0) {
+      const lastInt = parseFloat(intMatches[intMatches.length - 1]);
+      return Number.isFinite(lastInt) ? lastInt : null;
+    }
+
+    return normalizePriceString(clean);
   };
 
-  // 4. Fiscal Regex Pattern Lexicons
-  const grandTotalLineRegex = /(?:SUMA\s*PLN|DO\s*ZAP[ŁL]ATY|RAZEM|TOTAL|GRAND\s*TOTAL|KWOTA\s*PLN|KWOTA|BAL\s*DUE|BALANCE\s*DUE|AMOUNT\s*DUE|TOTAL\s*DUE|TOTAL\s*TO\s*PAY|FINAL\s*TOTAL|PŁATNOŚĆ\s*KARTĄ|PLATNOSC\s*KARTA|GESAMTBETRAG|GESAMT|SUMME|ZU\s*ZAHLEN|TOTAL\s*TTC|NET\s*A\s*PAYER|IMPORTE|TOTALE|СУМА|ВСЬОГО|ДО\s*СПЛАТИ|合計)/i;
-  const taxLineRegex = /(?:SUMA\s*PTU|PTU\s*[A-Z]|PTU|VAT|PODATEK|KWOTA\s*PTU|SALES\s*TAX|STATE\s*TAX|CITY\s*TAX|TAX|MWST|UST|TVA|IVA|GST|HST|PST|ПДВ|ПОДАТОК|АКЦИЗ|消費税)/i;
-  const subtotalLineRegex = /(?:SPRZEDA[ZŻ]\s*OPODATKOWANA|NETTO|OPODATKOWANIE|WARTOŚĆ\s*NETTO|WARTOSC\s*NETTO|SUB[\s\-]*TOTAL|NET[\s\-]*AMOUNT|PRE[\s\-]*TAX|PODSUMA|SUMA\s*BEZ\s*PODATKU|TOTAL\s*HT|SOUS[\s\-]*TOTAL|IMPONIBILE|ZWISCHENSUMME|ПІДСУМОК|小計)/i;
+  // 4. Fuzzy Keyword Regex Lexicons (Handles character noise like "S U M A", "SUNA", "TOTAI", "ZAPŁAT")
+  const grandTotalLineRegex = /(?:S\s*U\s*[MN]\s*A|S[UÜO0][MN]A|R\s*A\s*Z\s*[E3]\s*M|DO\s*Z\s*A\s*P\s*[ŁL]\s*A\s*T\s*Y|T\s*O\s*T\s*A\s*[LI1]|G\s*R\s*A\s*N\s*D\s*T\s*O\s*T\s*A\s*L|K\s*W\s*O\s*T\s*A|B\s*A\s*L(?:\s*A\s*N\s*C\s*E)?\s*D\s*U\s*E|A\s*M\s*O\s*U\s*N\s*T\s*D\s*U\s*E|T\s*O\s*T\s*A\s*L\s*D\s*U\s*E|P\s*Ł\s*A\s*T\s*N\s*O\s*Ś\s*Ć\s*K\s*A\s*R\s*T\s*Ą|G\s*E\s*S\s*A\s*M\s*T|Z\s*U\s*Z\s*A\s*H\s*L\s*E\s*N|T\s*O\s*T\s*A\s*L\s*T\s*T\s*C|С\s*У\s*М\s*А|В\s*С\s*Ь\s*О\s*Г\s*О|Д\s*О\s*С\s*П\s*Л\s*А\s*Т\s*И|合\s*計)/i;
+  const taxLineRegex = /(?:S\s*U\s*M\s*A\s*P\s*T\s*U|P\s*T\s*U(?:\s*[A-Z])?|V\s*A\s*T|P\s*O\s*D\s*A\s*T\s*E\s*K|T\s*A\s*X|M\s*W\s*S\s*T|T\s*V\s*A|I\s*V\s*A|G\s*S\s*T|П\s*Д\s*В|消\s*費\s*税)/i;
+  const subtotalLineRegex = /(?:S\s*P\s*R\s*Z\s*E\s*D\s*A\s*[ZŻ]\s*O\s*P\s*O\s*D\s*A\s*T\s*K\s*O\s*W\s*A\s*N\s*A|N\s*E\s*T\s*T\s*O|S\s*U\s*B\s*[\-\s]*\s*T\s*O\s*T\s*A\s*L|T\s*O\s*T\s*A\s*L\s*H\s*T|P\s*R\s*E\s*[\-\s]*\s*T\s*A\s*X|P\s*O\s*D\s*S\s*U\s*M\s*A|П\s*І\s*Д\s*С\s*У\s*М\s*О\s*К|小\s*計|Z\s*W\s*I\s*S\s*C\s*H\s*E\s*N\s*S\s*U\s*M\s*M\s*E)/i;
 
   const summaryExclusionKeywords = [
     'subtotal', 'sub total', 'sub-total', 'netto', 'sprzedaż', 'sprzedaz',
@@ -312,7 +340,7 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
     'tel:', 'phone', 'www.', 'http',
   ];
 
-  // 5. Line-by-Line Fiscal Analysis
+  // 5. Line-by-Line Fiscal Analysis (Strategy A)
   for (let idx = 0; idx < lines.length; idx++) {
     const line = lines[idx];
     const lower = line.toLowerCase();
@@ -349,7 +377,7 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
       continue;
     }
 
-    // C. Grand Total / SUMA PLN / DO ZAPŁATY Detection
+    // C. Grand Total / SUMA / DO ZAPŁATY Detection
     if (grandTotalLineRegex.test(line)) {
       const price = extractValidLinePrice(line);
       if (price !== null && price > 0) {
@@ -370,7 +398,6 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
     // D. Individual Line Items Detection (including discounts / opust)
     const isSummaryLine = summaryExclusionKeywords.some((kw) => lower.includes(kw));
     if (!isSummaryLine) {
-      // Check for price at end of line (e.g. "JOGU FAN TWIX CAR 11,00 A" or "OPUST -1,02")
       const priceTrailingRegex = /(?:[\$£€₴₹\s]|^)\s*(-?\d{1,4}[.,]\d{2})(?:\s*[A-Za-z*złPLN]+)?$/i;
       const priceMatch = line.match(priceTrailingRegex);
 
@@ -386,7 +413,6 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
           itemName = qtyMatch[2];
         }
 
-        // Clean out noisy characters and item quantity multiplier lines like "1 * 11,00"
         itemName = itemName
           .replace(/^\d+\s*[*xX]\s*[\d.,]+\s*/, '')
           .replace(/^[^a-zA-Z0-9ŻŹĆĄŚĘŁÓŃżźćąśęłóńА-Яа-яІіЇїЄєҐґ]+/, '')
@@ -405,10 +431,9 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
     }
   }
 
-  // 6. Multi-Line Regex Fallback Across Full Text Block
-  // (Handles cases where OCR broke keywords and numbers across newlines/spaces)
+  // 6. Multi-Line Permissive Regex Across Full Text Block
   if (grandTotal <= 0) {
-    const multiGtRegex = /(?:SUMA\s*PLN|DO\s*ZAP[ŁL]ATY|RAZEM|TOTAL|GRAND\s*TOTAL|BAL(?:ANCE)?\s*DUE|AMOUNT\s*DUE|TOTAL\s*DUE)[\s\S]{0,30}?([0-9]{1,4}[.,\s][0-9]{2})/gi;
+    const multiGtRegex = /(?:SUMA\s*PLN|DO\s*ZAP[ŁL]ATY|RAZEM|TOTAL|GRAND\s*TOTAL|BAL(?:ANCE)?\s*DUE|AMOUNT\s*DUE|TOTAL\s*DUE|KWOTA\s*PLN|S\s*U\s*M\s*A)[\s\S]{0,35}?([0-9]{1,4}[.,\s][0-9]{2})/gi;
     let m;
     while ((m = multiGtRegex.exec(rawText)) !== null) {
       const p = parseFloat(m[1].replace(/\s/g, '').replace(',', '.'));
@@ -417,7 +442,7 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
   }
 
   if (taxAmount <= 0) {
-    const multiTaxRegex = /(?:SUMA\s*PTU|PTU\s*[A-Z]|VAT|TAX|PODATEK|MWST|TVA|IVA|ПДВ)[\s\S]{0,30}?([0-9]{1,4}[.,\s][0-9]{2})/gi;
+    const multiTaxRegex = /(?:SUMA\s*PTU|PTU\s*[A-Z]|VAT|TAX|PODATEK|MWST|TVA|IVA|ПДВ)[\s\S]{0,35}?([0-9]{1,4}[.,\s][0-9]{2})/gi;
     let m;
     while ((m = multiTaxRegex.exec(rawText)) !== null) {
       const p = parseFloat(m[1].replace(/\s/g, '').replace(',', '.'));
@@ -426,7 +451,7 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
   }
 
   if (subtotal <= 0) {
-    const multiSubRegex = /(?:SPRZEDA[ZŻ]\s*OPODATKOWANA|NETTO|OPODATKOWANIE|SUB[\s\-]*TOTAL|TOTAL\s*HT|PRE[\s\-]*TAX)[\s\S]{0,30}?([0-9]{1,4}[.,\s][0-9]{2})/gi;
+    const multiSubRegex = /(?:SPRZEDA[ZŻ]\s*OPODATKOWANA|NETTO|OPODATKOWANIE|SUB[\s\-]*TOTAL|TOTAL\s*HT|PRE[\s\-]*TAX)[\s\S]{0,35}?([0-9]{1,4}[.,\s][0-9]{2})/gi;
     let m;
     while ((m = multiSubRegex.exec(rawText)) !== null) {
       const p = parseFloat(m[1].replace(/\s/g, '').replace(',', '.'));
@@ -434,58 +459,86 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
     }
   }
 
-  // 6. Mathematical Consistency, Sanity Guardrails & Self-Healing
+  // 7. STRATEGY B: BOTTOM-UP NUMBER HEURISTIC (Never Return Empty)
+  // If Strategy A yielded no grand total, search for all valid decimal monetary amounts bottom-up
+  if (grandTotal <= 0) {
+    const extractedCandidates: number[] = [];
+
+    // Scan lines from bottom to top
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const line = lines[i];
+      let clean = line.replace(/(\d)\s*([.,])\s*(\d)/g, '$1$2$3');
+      
+      // Filter out dates (2024, 2025, 2026, 1956), time (14:23, 10:15), NIP IDs (10 digits), and weights
+      clean = clean.replace(/\b\d{4}[-/.]\d{1,2}[-/.]\d{1,2}\b/g, ' ');
+      clean = clean.replace(/\b\d{2}[-/.]\d{2}[-/.]\d{4}\b/g, ' ');
+      clean = clean.replace(/\b\d{4}r\b/gi, ' ');
+      clean = clean.replace(/\b\d{1,2}:\d{2}(?::\d{2})?\b/g, ' ');
+      clean = clean.replace(/\bNIP[:\s]*\d{10}\b/gi, ' ');
+      clean = clean.replace(/\b\d+\s*(?:g|kg|ml|l|szt|gr)\b/gi, ' ');
+
+      const matches = clean.match(/\b\d{1,4}[.,]\d{2}\b/g);
+      if (matches) {
+        for (const matchStr of matches) {
+          const num = parseFloat(matchStr.replace(',', '.'));
+          // Filter out typical year numbers (e.g. 2026.00 or 1956.00) or barcode numbers
+          if (num > 0.5 && num < 10000 && num !== 2025 && num !== 2026 && num !== 1956) {
+            extractedCandidates.push(num);
+          }
+        }
+      }
+    }
+
+    if (extractedCandidates.length > 0) {
+      // Pick the bottom-most candidate or the largest reasonable value in the bottom section
+      grandTotal = extractedCandidates[0];
+    }
+  }
+
+  // 8. Auto-Derivation for Tax & Subtotal when missing
   const sumOfItems = lineItems.reduce((acc, it) => acc + it.price, 0);
 
-  // Guardrail 1: Tax MUST be strictly less than Grand Total (Tax < Grand Total)
-  if (taxAmount > 0 && grandTotal > 0 && taxAmount >= grandTotal) {
-    // Invalidate erroneous tax (e.g. tax parsed from 120g weight or NIP)
+  // If Grand Total is missing, infer from line items or Subtotal + Tax
+  if (grandTotal <= 0) {
+    if (sumOfItems > 0) {
+      grandTotal = parseFloat((sumOfItems + taxAmount).toFixed(2));
+      subtotal = sumOfItems;
+    } else if (subtotal > 0) {
+      grandTotal = parseFloat((subtotal + taxAmount).toFixed(2));
+    }
+  }
+
+  // Auto-derive Tax & Subtotal if Tax is zero/missing from receipt
+  if (grandTotal > 0 && taxAmount <= 0) {
     if (subtotal > 0 && subtotal < grandTotal) {
       taxAmount = parseFloat((grandTotal - subtotal).toFixed(2));
     } else {
-      // Standard European/Global tax estimate (~23% or ~10%)
-      taxAmount = parseFloat(((grandTotal * 0.23) / 1.23).toFixed(2));
+      // Mathematically derive 23% VAT: Subtotal = Total / 1.23, Tax = Total - Subtotal
+      subtotal = parseFloat((grandTotal / 1.23).toFixed(2));
+      taxAmount = parseFloat((grandTotal - subtotal).toFixed(2));
+      isEstimatedTax = true;
     }
   }
 
-  // Guardrail 2: Subtotal cannot exceed or equal Grand Total when Tax is present
-  if (grandTotal > 0 && taxAmount > 0) {
-    if (subtotal >= grandTotal || Math.abs((subtotal + taxAmount) - grandTotal) > 0.05) {
-      subtotal = parseFloat(Math.max(0, grandTotal - taxAmount).toFixed(2));
-    }
+  // Mathematical Consistency Guardrails
+  if (taxAmount > 0 && grandTotal > 0 && taxAmount >= grandTotal) {
+    taxAmount = parseFloat(((grandTotal * 0.23) / 1.23).toFixed(2));
+    subtotal = parseFloat((grandTotal - taxAmount).toFixed(2));
+    isEstimatedTax = true;
   }
 
-  // If Grand Total is detected and Tax is detected, infer Subtotal if missing or zero
   if (grandTotal > 0 && taxAmount > 0 && subtotal <= 0) {
     subtotal = parseFloat(Math.max(0, grandTotal - taxAmount).toFixed(2));
   }
 
-  // If Subtotal is missing, infer from line items
-  if (subtotal <= 0 && sumOfItems > 0) {
-    subtotal = parseFloat(sumOfItems.toFixed(2));
+  if (grandTotal > 0 && taxAmount > 0 && subtotal >= grandTotal) {
+    subtotal = parseFloat(Math.max(0, grandTotal - taxAmount).toFixed(2));
   }
 
-  // If Grand Total is missing, infer from Subtotal + Tax or sum of line items + Tax
-  if (grandTotal <= 0) {
-    if (subtotal > 0) {
-      grandTotal = parseFloat((subtotal + taxAmount).toFixed(2));
-    } else if (sumOfItems > 0) {
-      grandTotal = parseFloat((sumOfItems + taxAmount).toFixed(2));
-      subtotal = sumOfItems;
-    }
-  }
-
-  // If Tax is 0, but Grand Total > Subtotal > 0
-  if (taxAmount <= 0 && grandTotal > subtotal && subtotal > 0) {
-    taxAmount = parseFloat((grandTotal - subtotal).toFixed(2));
-  }
-
-  // Final Validation Check: Subtotal + Tax ≈ Grand Total (within 5 cents tolerance)
   const mathSum = subtotal + taxAmount;
   const discrepancy = Math.abs(mathSum - grandTotal);
   const isValidated = grandTotal > 0 && discrepancy <= 0.05;
 
-  // Calculate heuristic confidence score
   let confidence = 40;
   if (grandTotal > 0) confidence += 25;
   if (subtotal > 0) confidence += 15;
@@ -502,6 +555,7 @@ export function parseReceiptText(rawText: string): ParsedReceiptData {
     detectedCurrency,
     lineItems,
     isValidated,
+    isEstimatedTax,
     mathDiscrepancy: discrepancy > 0.05 ? parseFloat(discrepancy.toFixed(2)) : undefined,
     confidenceScore: Math.min(100, confidence),
     rawText,

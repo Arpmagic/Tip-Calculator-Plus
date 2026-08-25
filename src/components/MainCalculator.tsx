@@ -559,20 +559,20 @@ export const MainCalculator: React.FC<MainCalculatorProps> = ({
           />
         </div>
 
-        <div className="flex gap-2.5">
+        <div className="flex gap-2">
           <button
             id="btn-save-calculation"
             onClick={handleSaveCalculation}
-            className={`flex-1 min-h-[56px] h-14 rounded-2xl font-display font-black text-sm flex items-center justify-center gap-2.5 transition-all active:scale-[0.97] cursor-pointer ${
+            className={`flex-1 min-h-[56px] h-14 rounded-xl font-display font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer shadow-lg ${
               savedSuccess
-                ? 'bg-emerald-500 text-[#0B0F19] shadow-[0_0_24px_rgba(16,185,129,0.4)]'
-                : 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] hover:brightness-105 shadow-[0_0_24px_rgba(251,191,36,0.3)]'
+                ? 'bg-emerald-500 text-[#05070E] shadow-[0_0_24px_rgba(16,185,129,0.4)]'
+                : 'bg-[#F0C05A] hover:bg-[#E2B248] text-[#05070E] shadow-[0_4px_24px_rgba(240,192,90,0.18)]'
             }`}
           >
             {savedSuccess ? (
               <>
                 <Check className="w-5 h-5 stroke-[2.5]" />
-                <span>{t.common.savedSuccess}</span>
+                <span>{t.calculator.savedSuccess}</span>
               </>
             ) : (
               <>

@@ -307,6 +307,48 @@ const testCases: TestCase[] = [
     expectedTax: 2.72,
     expectedSubtotal: 19.24,
   },
+
+  // 12. Noisy OCR Character Spacing & Keyword Noise
+  {
+    id: 'noisy_spaced_keywords',
+    name: 'Noisy Character Spacing & Broken Keywords',
+    rawText: `
+      RESTAURACJA GDAŃSK STARE MIASTO
+      NIP 583-00-11-222
+      1 PIEROGI RUSKIE 250g  32,00
+      1 KOMPOT OWOCOWY 0.5L   8,00
+      S U M A   P L N         40,00
+      D O   Z A P Ł A T Y     40,00
+      2026-08-25 19:52
+    `,
+    expectedVenue: 'RESTAURACJA GDAŃSK STARE MIASTO',
+    expectedCurrency: 'PLN',
+    expectedGrandTotal: 40.00,
+    expectedTax: 7.48, // Derived 23% VAT: 40.00 - (40.00 / 1.23) = 7.48
+    expectedSubtotal: 32.52,
+  },
+
+  // 13. Strategy B: Missing Keyword Fallback (Bottom-Up Heuristic)
+  {
+    id: 'strategy_b_missing_keywords',
+    name: 'Strategy B: Bottom-Up Number Extraction Without Fiscal Keywords',
+    rawText: `
+      WARSZAWSKI BISTRO BAR
+      UL. MARSZAŁKOWSKA 10, WARSZAWA
+      ROK ZAŁOŻENIA 1956
+      SERWIS 14:40
+      BURGER CLASSIC 180g    28,50
+      FRYTKI BELGIJSKIE       9,50
+      LEMONIADA 400ml         7,00
+      45,00
+      2026-08-25
+    `,
+    expectedVenue: 'WARSZAWSKI BISTRO BAR',
+    expectedCurrency: 'PLN',
+    expectedGrandTotal: 45.00,
+    expectedTax: 8.41, // Derived 23% VAT: 45.00 - (45.00 / 1.23) = 8.41
+    expectedSubtotal: 36.59,
+  },
 ];
 
 export function runOcrBenchmarks() {
