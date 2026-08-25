@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { UserProfile } from '../types';
 import { 
   X, 
@@ -9,7 +10,9 @@ import {
   CheckCircle2, 
   Shield, 
   ArrowRight,
-  Fingerprint
+  Fingerprint,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -31,7 +34,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [name, setName] = useState<string>(currentUser.name !== 'Guest User' ? currentUser.name : '');
   const [email, setEmail] = useState<string>(currentUser.email && currentUser.email !== 'guest@device.local' ? currentUser.email : '');
   const [password, setPassword] = useState<string>('');
-  const [rememberMe, setRememberMe] = useState<boolean>(true);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -67,14 +70,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     onClose();
   };
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
       <div 
-        className="w-full max-w-md glass-card rounded-3xl p-6 sm:p-8 relative overflow-hidden border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
+        className="w-full max-w-md glass-card rounded-3xl p-6 sm:p-8 relative overflow-hidden border border-white/[0.12] bg-[#090D16]/95 backdrop-blur-2xl shadow-[0_24px_64px_rgba(0,0,0,0.85)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Subtle decorative glow */}
-        <div className="absolute -top-16 -right-16 w-36 h-36 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -top-16 -right-16 w-36 h-36 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
@@ -188,7 +191,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button
             type="submit"
             id="auth-submit-btn"
-            className="w-full h-12 mt-2 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] font-display font-black text-sm rounded-xl flex items-center justify-center gap-2 hover:brightness-105 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(251,191,36,0.3)] cursor-pointer"
+            className="w-full h-12 mt-2 bg-gradient-to-r from-[#F5D061] via-[#E6B83D] to-[#C9971E] text-[#090D16] font-display font-black text-sm rounded-xl flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(230,184,61,0.25)] hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
           >
             <span>{mode === 'signin' ? t.auth.signInBtn : t.auth.signUpBtn}</span>
             <ArrowRight className="w-4 h-4 stroke-[3]" />
@@ -200,7 +203,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button
             type="button"
             onClick={handleQuickGuest}
-            className="w-full py-2.5 px-3 glass-button rounded-xl text-xs text-[#dce1fb] hover:text-white flex items-center justify-center gap-2 transition-all"
+            className="w-full py-2.5 px-3 glass-button rounded-xl text-xs text-[#dce1fb] hover:text-white flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             <Fingerprint className="w-4 h-4 text-emerald-400" />
             <span>{t.auth.guestPro}</span>
@@ -217,5 +220,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };
 

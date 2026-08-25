@@ -1,16 +1,62 @@
 /**
  * Image Pre-processing Utility for On-Device Thermal Receipt OCR.
  * Uses HTML5 Canvas to convert image to high-contrast grayscale,
+ * compute Otsu's global adaptive threshold, normalize contrast,
  * reduce thermal paper fade, remove finger shadows, and sharpen text edges.
  */
 
 export interface PreprocessOptions {
   contrast?: number; // -100 to 100, default +65
-  brightness?: number; // -100 to 100, default +10
+  brightness?: number; // -100 to 100, default +8
   sharpen?: boolean; // Apply unsharp masking for blurry characters
-  binarize?: boolean; // Adaptive thresholding for faded thermal receipts
-  threshold?: number; // 0 to 255, default 135
+  binarize?: boolean; // Adaptive Otsu thresholding for faded thermal receipts
+  threshold?: number; // 0 to 255 (if omitted, Otsu computes optimal threshold)
   maxWidth?: number; // Max resolution clamp for performance (e.g. 1800px)
+}
+
+/**
+ * Computes the optimal binarization threshold using Otsu's method.
+ * Maximizes between-class variance across grayscale histogram.
+ */
+export function computeOtsuThreshold(grayscaleData: Uint8ClampedArray | number[]): number {
+  const histogram = new Array(256).fill(0);
+  const totalPixels = grayscaleData.length / 4;
+
+  for (let i = 0; i < grayscaleData.length; i += 4) {
+    const val = grayscaleData[i];
+    histogram[val]++;
+  }
+
+  let sum = 0;
+  for (let i = 0; i < 256; i++) {
+    sum += i * histogram[i];
+  }
+
+  let sumB = 0;
+  let weightB = 0;
+  let weightF = 0;
+  let maxVariance = 0;
+  let threshold = 135; // Default fallback
+
+  for (let t = 0; t < 256; t++) {
+    weightB += histogram[t];
+    if (weightB === 0) continue;
+
+    weightF = totalPixels - weightB;
+    if (weightF === 0) break;
+
+    sumB += t * histogram[t];
+    const meanB = sumB / weightB;
+    const meanF = (sum - sumB) / weightF;
+
+    const varianceBetween = weightB * weightF * (meanB - meanF) * (meanB - meanF);
+    if (varianceBetween > maxVariance) {
+      maxVariance = varianceBetween;
+      threshold = t;
+    }
+  }
+
+  return threshold;
 }
 
 /**
@@ -25,7 +71,6 @@ export async function loadImageToCanvas(
 
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      // Scale down overly large phone photos (e.g. 4000x3000) for fast OCR execution
       const maxDim = 1800;
       let width = img.naturalWidth || img.width;
       let height = img.naturalHeight || img.height;
@@ -68,17 +113,16 @@ export async function loadImageToCanvas(
 }
 
 /**
- * Preprocesses receipt canvas with high-contrast grayscale and adaptive thresholding
+ * Preprocesses receipt canvas with high-contrast grayscale and adaptive Otsu thresholding
  * specifically optimized for faded thermal receipts, dark dining lighting, and wrinkled paper.
  */
 export function preprocessCanvas(
   canvas: HTMLCanvasElement,
   options: PreprocessOptions = {}
 ): HTMLCanvasElement {
-  const contrast = options.contrast ?? 65; // High contrast boost for thermal paper
+  const contrast = options.contrast ?? 65;
   const brightness = options.brightness ?? 8;
   const binarize = options.binarize ?? false;
-  const thresholdVal = options.threshold ?? 135;
 
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) return canvas;
@@ -88,8 +132,7 @@ export function preprocessCanvas(
   const imgData = ctx.getImageData(0, 0, width, height);
   const data = imgData.data;
 
-  // Pre-calculate contrast lookup factor
-  // Formula: factor = (259 * (contrast + 255)) / (255 * (259 - contrast))
+  // Pre-calculate contrast factor
   const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
 
   for (let i = 0; i < data.length; i += 4) {
@@ -97,7 +140,7 @@ export function preprocessCanvas(
     const g = data[i + 1];
     const b = data[i + 2];
 
-    // 1. Standard ITU-R BT.601 Luminance grayscale conversion
+    // 1. ITU-R BT.601 Luminance grayscale conversion
     let gray = 0.299 * r + 0.587 * g + 0.114 * b;
 
     // 2. Brightness adjustment
@@ -109,15 +152,20 @@ export function preprocessCanvas(
     // Clamp between 0 and 255
     gray = Math.max(0, Math.min(255, gray));
 
-    // 4. Optional adaptive binarization (useful for heavily faded ink)
-    if (binarize) {
-      gray = gray > thresholdVal ? 255 : 0;
-    }
-
     data[i] = gray;
     data[i + 1] = gray;
     data[i + 2] = gray;
-    // alpha remains untouched
+  }
+
+  // 4. Optional adaptive Otsu threshold binarization
+  if (binarize) {
+    const otsuThreshold = options.threshold ?? computeOtsuThreshold(data);
+    for (let i = 0; i < data.length; i += 4) {
+      const val = data[i] > otsuThreshold ? 255 : 0;
+      data[i] = val;
+      data[i + 1] = val;
+      data[i + 2] = val;
+    }
   }
 
   // 5. Optional 3x3 Laplacian sharpening kernel for receipt text edges
@@ -134,7 +182,6 @@ export function preprocessCanvas(
  */
 function applySharpenKernel(data: Uint8ClampedArray, width: number, height: number) {
   const copy = new Uint8ClampedArray(data);
-  // Kernel: [ 0, -1, 0, -1, 5, -1, 0, -1, 0 ]
   for (let y = 1; y < height - 1; y++) {
     for (let x = 1; x < width - 1; x++) {
       const idx = (y * width + x) * 4;

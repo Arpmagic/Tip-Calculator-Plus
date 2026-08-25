@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, RefObject } from 'react';
 
 export interface UseCameraOptions {
   idealFacingMode?: 'environment' | 'user';
@@ -8,7 +8,7 @@ export interface UseCameraOptions {
 }
 
 export interface UseCameraReturn {
-  videoRef: React.RefObject<HTMLVideoElement | null>;
+  videoRef: RefObject<HTMLVideoElement | null>;
   stream: MediaStream | null;
   isStreaming: boolean;
   isLoading: boolean;
@@ -30,20 +30,21 @@ export function useCamera({
 }: UseCameraOptions = {}): UseCameraReturn {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const videoTrackRef = useRef<MediaStreamTrack | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [hasCamera, setHasCamera] = useState<boolean>(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const [torchSupported, setTorchSupported] = useState<boolean>(false);
+  const [torchSupported, setTorchSupported] = useState<boolean>(true);
   const [isTorchOn, setIsTorchOn] = useState<boolean>(false);
 
-  // Stop camera tracks cleanly
+  // Stop camera tracks cleanly and ensure torch is disabled
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => {
         try {
-          if (isTorchOn && (track as any).applyConstraints) {
+          if (typeof (track as any).applyConstraints === 'function') {
             (track as any).applyConstraints({ advanced: [{ torch: false }] }).catch(() => {});
           }
           track.stop();
@@ -54,6 +55,8 @@ export function useCamera({
       streamRef.current = null;
     }
 
+    videoTrackRef.current = null;
+
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
@@ -61,8 +64,7 @@ export function useCamera({
     setStream(null);
     setIsStreaming(false);
     setIsTorchOn(false);
-    setTorchSupported(false);
-  }, [isTorchOn]);
+  }, []);
 
   // Start live WebRTC video stream
   const startCamera = useCallback(async (): Promise<boolean> => {
@@ -133,8 +135,10 @@ export function useCamera({
     setStream(mediaStream);
     setHasCamera(true);
 
-    // Check torch / flashlight capability
-    const track = mediaStream.getVideoTracks()[0];
+    // Check torch / flashlight capability & store active track reference
+    const track = mediaStream.getVideoTracks()[0] || null;
+    videoTrackRef.current = track;
+
     if (track) {
       const getCapabilities = (track as any).getCapabilities;
       if (typeof getCapabilities === 'function') {
@@ -142,8 +146,10 @@ export function useCamera({
           const caps = getCapabilities.call(track);
           setTorchSupported(Boolean(caps && caps.torch));
         } catch {
-          setTorchSupported(false);
+          setTorchSupported(true);
         }
+      } else {
+        setTorchSupported(true);
       }
     }
 
@@ -161,10 +167,9 @@ export function useCamera({
     return true;
   }, [idealFacingMode, idealWidth, idealHeight, stopCamera]);
 
-  // Toggle Torch/Flashlight
+  // Toggle Torch/Flashlight with active constraint updates
   const toggleTorch = useCallback(async (): Promise<boolean> => {
-    if (!streamRef.current || !torchSupported) return false;
-    const track = streamRef.current.getVideoTracks()[0];
+    const track = videoTrackRef.current || streamRef.current?.getVideoTracks()[0];
     if (!track || typeof (track as any).applyConstraints !== 'function') return false;
 
     const nextState = !isTorchOn;
@@ -178,7 +183,7 @@ export function useCamera({
       console.warn('Torch toggle failed:', err);
       return false;
     }
-  }, [torchSupported, isTorchOn]);
+  }, [isTorchOn]);
 
   // Capture current video frame to high-res Blob & DataURL
   const captureSnapshot = useCallback(async (): Promise<{

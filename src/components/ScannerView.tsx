@@ -234,22 +234,22 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
           </span>
         </div>
 
-        {/* Torch / Flashlight Button (if supported) */}
+        {/* Torch / Flashlight Button (Tactile 44x44dp Glass Button) */}
         {torchSupported ? (
-            <button
+          <button
             onClick={toggleTorch}
-            className={`w-12 h-12 min-w-[48px] min-h-[48px] rounded-full backdrop-blur-xl border flex items-center justify-center pointer-events-auto transition-all active:scale-90 shadow-lg ${
+            className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full backdrop-blur-xl border flex items-center justify-center pointer-events-auto transition-all active:scale-90 cursor-pointer shadow-lg ${
               isTorchOn
-                ? 'bg-amber-400 text-[#0B0F19] border-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.5)]'
-                : 'bg-black/50 text-white/80 hover:text-white border-white/20'
+                ? 'bg-amber-400/20 text-amber-300 border-amber-400/50 shadow-[0_0_15px_rgba(251,191,36,0.3)]'
+                : 'bg-black/40 text-white/70 border-white/10 hover:text-white hover:bg-black/60'
             }`}
             title={isTorchOn ? t.scanner.torchOn : t.scanner.torchOff}
             aria-label="Toggle Flashlight"
           >
-            {isTorchOn ? <Zap className="w-5 h-5 fill-current" /> : <ZapOff className="w-5 h-5" />}
+            {isTorchOn ? <Zap className="w-5 h-5 fill-amber-300" /> : <ZapOff className="w-5 h-5" />}
           </button>
         ) : (
-          <div className="w-12 h-12" />
+          <div className="w-11 h-11" />
         )}
       </header>
 
@@ -422,37 +422,33 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
 
       {/* STATE 3 CONTROLS: Actionable Result Sheet (Slide-Up Modal) */}
       {imagePreviewUrl && !isProcessing && parsedData && (
-        <div className="relative z-30 animate-slide-up bg-[#0B0F19]/95 backdrop-blur-2xl border-t border-white/15 rounded-t-3xl p-5 sm:p-6 shadow-[0_-12px_36px_rgba(0,0,0,0.7)] max-w-lg mx-auto w-full flex flex-col gap-4 pb-safe">
+        <div className="relative z-30 animate-slide-up bg-[#090D16]/95 backdrop-blur-2xl border-t border-white/[0.08] rounded-t-3xl p-5 sm:p-6 shadow-[0_-16px_48px_rgba(0,0,0,0.8)] max-w-lg mx-auto w-full flex flex-col gap-4 pb-safe">
           
-          {/* Header: Venue & Verified Status */}
-          <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
-            <div className="flex-1">
-              <span className="font-mono text-[10px] text-[#c4c7c8] uppercase tracking-wider block font-semibold">
+          {/* Header: Venue & Clean Verified Status */}
+          <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
+            <div className="flex-1 min-w-0">
+              <span className="font-mono text-[10px] text-[#c4c7c8]/80 uppercase tracking-widest block font-semibold">
                 {t.scanner.detectedVenue}
               </span>
               <input
                 type="text"
                 value={venue}
                 onChange={(e) => setVenue(e.target.value)}
-                className="bg-transparent border-none outline-none font-display font-extrabold text-lg text-white p-0 w-full focus:ring-0"
+                className="bg-transparent border-none outline-none font-display font-black text-xl text-white p-0 w-full focus:ring-0 truncate mt-0.5"
                 placeholder={t.calculator.defaultVenueName}
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               {parsedData.detectedCurrency && (
-                <span className="inline-flex items-center gap-1 bg-amber-400/15 border border-amber-400/40 text-amber-300 text-xs font-mono font-bold px-2.5 py-1 rounded-full shrink-0">
+                <span className="inline-flex items-center bg-amber-400/15 border border-amber-400/40 text-amber-300 text-xs font-mono font-bold px-2.5 py-1 rounded-full shadow-sm">
                   <span>{parsedData.detectedCurrency}</span>
                 </span>
               )}
-              {parsedData.isValidated ? (
-                <span className="inline-flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold px-3 py-1.5 rounded-full shrink-0">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              {parsedData.isValidated && (
+                <span className="inline-flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-bold px-3 py-1 rounded-full shadow-sm">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                   <span>{t.scanner.verified}</span>
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 bg-sky-500/20 border border-sky-500/40 text-sky-300 text-xs font-mono px-3 py-1.5 rounded-full shrink-0">
-                  <span>{t.scanner.parsed}</span>
                 </span>
               )}
             </div>
@@ -460,30 +456,31 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
 
           {/* Grand Total & Tax Hero Grid */}
           <div className="grid grid-cols-2 gap-3">
-            {/* Grand Total */}
-            <div className="flex flex-col p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30">
-              <span className="font-mono text-[10px] text-emerald-400 uppercase font-bold tracking-wider mb-0.5">
+            {/* Grand Total Hero Card */}
+            <div className="flex flex-col p-4 rounded-2xl bg-white/[0.03] backdrop-blur-2xl border border-emerald-500/30 shadow-[0_8px_32px_rgba(0,0,0,0.36)] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
+              <span className="font-mono text-[10px] text-emerald-400 uppercase font-bold tracking-wider mb-1 z-10">
                 {t.scanner.detectedTotal}
               </span>
-              <div className="flex items-baseline gap-1">
-                <span className="text-base text-emerald-400 font-bold">{selectedCurrency.symbol}</span>
+              <div className="flex items-baseline gap-1.5 z-10">
+                <span className="text-lg text-emerald-400 font-bold">{selectedCurrency.symbol}</span>
                 <input
                   type="number"
                   step="0.01"
                   value={grandTotal || ''}
                   onChange={(e) => setGrandTotal(parseFloat(e.target.value) || 0)}
-                  className="bg-transparent border-none outline-none font-display font-black text-2xl sm:text-3xl text-white p-0 w-full tabular-nums"
+                  className="bg-transparent border-none outline-none font-display font-black text-2xl sm:text-3xl text-white p-0 w-full tabular-nums tracking-tight"
                 />
               </div>
             </div>
 
-            {/* Extracted Tax */}
-            <div className="flex flex-col p-3.5 rounded-2xl bg-white/5 border border-white/10">
-              <span className="font-mono text-[10px] text-[#c4c7c8] uppercase font-semibold tracking-wider mb-0.5">
+            {/* Extracted Tax Card */}
+            <div className="flex flex-col p-4 rounded-2xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.36)]">
+              <span className="font-mono text-[10px] text-[#c4c7c8]/80 uppercase font-semibold tracking-wider mb-1">
                 {t.scanner.detectedTax}
               </span>
-              <div className="flex items-baseline gap-1">
-                <span className="text-base text-[#c4c7c8]/70 font-bold">{selectedCurrency.symbol}</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-lg text-[#c4c7c8]/70 font-bold">{selectedCurrency.symbol}</span>
                 <input
                   type="number"
                   step="0.01"
@@ -495,8 +492,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
             </div>
           </div>
 
-          {/* Subtotal Info Pill */}
-          <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/5 text-xs font-mono text-[#c4c7c8]">
+          {/* Subtotal Info Row */}
+          <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-white/[0.02] border border-white/[0.06] text-xs font-mono text-[#c4c7c8]">
             <span>{t.scanner.calculatedSubtotal}</span>
             <span className="font-bold text-white tabular-nums">
               {formatCurrency(subtotal, selectedCurrency.code, language)}
@@ -508,7 +505,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
             <button
               id="btn-scanner-send-calc"
               onClick={handleSendToCalculator}
-              className="flex-1 min-h-[56px] h-14 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-[#0B0F19] font-display font-black text-sm flex items-center justify-center gap-2.5 hover:brightness-105 active:scale-[0.97] transition-all shadow-[0_0_24px_rgba(251,191,36,0.3)] cursor-pointer"
+              className="flex-1 min-h-[56px] h-14 rounded-2xl bg-gradient-to-r from-[#F5D061] via-[#E6B83D] to-[#C9971E] text-[#090D16] font-display font-black text-sm flex items-center justify-center gap-2.5 shadow-[0_4px_20px_rgba(230,184,61,0.25)] hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
             >
               <Check className="w-5 h-5 stroke-[2.5]" />
               <span>{t.scanner.applyToCalc}</span>
@@ -517,7 +514,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
             <button
               id="btn-scanner-send-itemized"
               onClick={handleSendToItemized}
-              className="flex-1 min-h-[56px] h-14 rounded-2xl glass-button text-white font-display font-black text-sm flex items-center justify-center gap-2.5 hover:bg-white/15 active:scale-[0.97] transition-all border border-white/15 cursor-pointer"
+              className="flex-1 min-h-[56px] h-14 rounded-2xl bg-white/[0.05] hover:bg-white/[0.1] text-white font-display font-black text-sm flex items-center justify-center gap-2.5 active:scale-[0.98] transition-all border border-white/[0.12] cursor-pointer shadow-md"
             >
               <Layers className="w-5 h-5 text-emerald-400" />
               <span>{t.scanner.applyToItemized}</span>
@@ -527,7 +524,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
           {/* Retake CTA */}
           <button
             onClick={handleRetake}
-            className="w-full text-center text-xs font-mono text-[#c4c7c8] hover:text-white flex items-center justify-center gap-1.5 py-1 transition-colors"
+            className="w-full text-center text-xs font-mono text-[#c4c7c8]/80 hover:text-white flex items-center justify-center gap-1.5 py-1 transition-colors cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>{t.scanner.retake}</span>
